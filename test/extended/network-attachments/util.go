@@ -1,10 +1,12 @@
 package networkattachments
 
 import (
+	"fmt"
 	"os/exec"
 
 	testexutil "github.com/openshift/origin/test/extended/util"
 	e2e "k8s.io/kubernetes/test/e2e/framework"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	. "github.com/onsi/ginkgo"
 	//. "github.com/onsi/gomega"
@@ -39,4 +41,16 @@ func InNetworkAttachmentContext(body func()) {
 
 		body()
 	})
+}
+
+func checkMultusDaemonStatus(f *e2e.Framework) error {
+	ds, err := f.ClientSet.AppsV1().DaemonSets("openshift-multus").Get("multus", metav1.GetOptions{})
+	if err != nil {
+		return fmt.Errorf("Could not get daemon set from v1.")
+	}
+	desired, scheduled, ready := ds.Status.DesiredNumberScheduled, ds.Status.CurrentNumberScheduled, ds.Status.    NumberReady
+	if desired != scheduled && desired != ready {
+		return fmt.Errorf("Error in daemon status. DesiredScheduled: %d, CurrentScheduled: %d, Ready: %d",     desired, scheduled, ready)
+	}
+	return nil
 }
