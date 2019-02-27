@@ -49,6 +49,7 @@ import (
 	_ "github.com/openshift/origin/test/extended/localquota"
 	_ "github.com/openshift/origin/test/extended/machines"
 	_ "github.com/openshift/origin/test/extended/networking"
+	_ "github.com/openshift/origin/test/extended/network-attachments"
 	_ "github.com/openshift/origin/test/extended/oauth"
 	_ "github.com/openshift/origin/test/extended/operators"
 	_ "github.com/openshift/origin/test/extended/project"
