@@ -404,6 +404,13 @@
 // test/extended/testdata/long_names/fixture.json
 // test/extended/testdata/multi-namespace-pipeline.yaml
 // test/extended/testdata/multi-namespace-template.yaml
+// test/extended/testdata/network-attachments/net-attach-def-json-ifname.yaml
+// test/extended/testdata/network-attachments/net-attach-def-json-mac.yaml
+// test/extended/testdata/network-attachments/net-attach-def-json-ns.yaml
+// test/extended/testdata/network-attachments/net-attach-def-json.yaml
+// test/extended/testdata/network-attachments/net-attach-def-text-ifname.yaml
+// test/extended/testdata/network-attachments/net-attach-def-text-ns.yaml
+// test/extended/testdata/network-attachments/net-attach-def-text.yaml
 // test/extended/testdata/oauthserver/cabundle-cm.yaml
 // test/extended/testdata/oauthserver/oauth-network.yaml
 // test/extended/testdata/oauthserver/oauth-pod.yaml
@@ -52709,6 +52716,373 @@ func testExtendedTestdataMultiNamespaceTemplateYaml() (*asset, error) {
 	return a, nil
 }
 
+var _testExtendedTestdataNetworkAttachmentsNetAttachDefJsonIfnameYaml = []byte(`---
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: net-attach-def-json-ifname
+spec: 
+  config: '{
+            "cniVersion": "0.3.0",
+            "type": "macvlan",
+            "master": "eth0",
+            "mode": "bridge",
+            "ipam": {
+                "type": "host-local",
+		"ranges": [[
+			  {"subnet": "192.18.0.0/24",
+			   "rangeStart": "192.18.0.1",
+			   "rangeEnd": "192.18.0.254"}
+			   ]]
+            }
+        }'
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: net-attach-def-json-ifname
+  annotations:
+    k8s.v1.cni.cncf.io/networks: '[
+            { "name": "net-attach-def-json-ifname",
+              "interface": "test01" }
+    ]'
+spec:
+  containers:
+  - name: net-attach-def-json-ifname
+    image: docker.io/centos/tools:latest
+    command: [ "/bin/bash", "-c", "sleep infinity" ]
+`)
+
+func testExtendedTestdataNetworkAttachmentsNetAttachDefJsonIfnameYamlBytes() ([]byte, error) {
+	return _testExtendedTestdataNetworkAttachmentsNetAttachDefJsonIfnameYaml, nil
+}
+
+func testExtendedTestdataNetworkAttachmentsNetAttachDefJsonIfnameYaml() (*asset, error) {
+	bytes, err := testExtendedTestdataNetworkAttachmentsNetAttachDefJsonIfnameYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "test/extended/testdata/network-attachments/net-attach-def-json-ifname.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _testExtendedTestdataNetworkAttachmentsNetAttachDefJsonMacYaml = []byte(`---
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: net-attach-def-json-mac
+spec: 
+  config: '{
+            "cniVersion": "0.3.0",
+            "name": "chains",
+            "plugins": [ {
+                "type": "macvlan",
+                "master": "eth0",
+                "mode": "bridge",
+                "ipam": {
+                    "type": "host-local",
+    		"ranges": [[
+    			  {"subnet": "192.18.0.0/24",
+    			   "rangeStart": "192.18.0.1",
+    			   "rangeEnd": "192.18.0.254"}
+    			   ]]
+                }
+              }, {
+                "type": "tuning"
+              }
+            ]
+        }'
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: net-attach-def-json-mac
+  annotations:
+    k8s.v1.cni.cncf.io/networks: '[
+            { "name": "net-attach-def-json-mac",
+              "mac": "test01" }
+    ]'
+spec:
+  containers:
+  - name: net-attach-def-json-mac
+    image: docker.io/centos/tools:latest
+    command: [ "/bin/bash", "-c", "sleep infinity" ]
+`)
+
+func testExtendedTestdataNetworkAttachmentsNetAttachDefJsonMacYamlBytes() ([]byte, error) {
+	return _testExtendedTestdataNetworkAttachmentsNetAttachDefJsonMacYaml, nil
+}
+
+func testExtendedTestdataNetworkAttachmentsNetAttachDefJsonMacYaml() (*asset, error) {
+	bytes, err := testExtendedTestdataNetworkAttachmentsNetAttachDefJsonMacYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "test/extended/testdata/network-attachments/net-attach-def-json-mac.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _testExtendedTestdataNetworkAttachmentsNetAttachDefJsonNsYaml = []byte(`# These test case is TBD (due to namespaceIsolation default)
+---
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: net-attach-def-json-ns
+  namespace: network-attachment-definition-another1
+spec: 
+  config: '{
+            "cniVersion": "0.3.0",
+            "type": "macvlan",
+            "master": "eth0",
+            "mode": "bridge",
+            "ipam": {
+                "type": "host-local",
+		"ranges": [[
+			  {"subnet": "192.18.0.0/24",
+			   "rangeStart": "192.18.0.1",
+			   "rangeEnd": "192.18.0.254"}
+			   ]]
+            }
+        }'
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: net-attach-def-json-ns
+  annotations:
+    k8s.v1.cni.cncf.io/networks: '[
+            { "name": "net-attach-def-json",
+              "namespace": "network-attachment-definition-another1" }
+    ]'
+spec:
+  containers:
+  - name: net-attach-def-json-ns
+    image: docker.io/centos/tools:latest
+    command: [ "/bin/bash", "-c", "sleep infinity" ]
+`)
+
+func testExtendedTestdataNetworkAttachmentsNetAttachDefJsonNsYamlBytes() ([]byte, error) {
+	return _testExtendedTestdataNetworkAttachmentsNetAttachDefJsonNsYaml, nil
+}
+
+func testExtendedTestdataNetworkAttachmentsNetAttachDefJsonNsYaml() (*asset, error) {
+	bytes, err := testExtendedTestdataNetworkAttachmentsNetAttachDefJsonNsYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "test/extended/testdata/network-attachments/net-attach-def-json-ns.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _testExtendedTestdataNetworkAttachmentsNetAttachDefJsonYaml = []byte(`---
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: net-attach-def-json
+spec: 
+  config: '{
+            "cniVersion": "0.3.0",
+            "type": "macvlan",
+            "master": "eth0",
+            "mode": "bridge",
+            "ipam": {
+                "type": "host-local",
+		"ranges": [[
+			  {"subnet": "192.18.0.0/24",
+			   "rangeStart": "192.18.0.1",
+			   "rangeEnd": "192.18.0.254"}
+			   ]]
+            }
+        }'
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: net-attach-def-json
+  annotations:
+    k8s.v1.cni.cncf.io/networks: '[
+            { "name": "net-attach-def-json" }
+    ]'
+spec:
+  containers:
+  - name: net-attach-def-json
+    image: docker.io/centos/tools:latest
+    command: [ "/bin/bash", "-c", "sleep infinity" ]
+`)
+
+func testExtendedTestdataNetworkAttachmentsNetAttachDefJsonYamlBytes() ([]byte, error) {
+	return _testExtendedTestdataNetworkAttachmentsNetAttachDefJsonYaml, nil
+}
+
+func testExtendedTestdataNetworkAttachmentsNetAttachDefJsonYaml() (*asset, error) {
+	bytes, err := testExtendedTestdataNetworkAttachmentsNetAttachDefJsonYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "test/extended/testdata/network-attachments/net-attach-def-json.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _testExtendedTestdataNetworkAttachmentsNetAttachDefTextIfnameYaml = []byte(`---
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: net-attach-def-text-ifname
+spec: 
+  config: '{
+            "cniVersion": "0.3.0",
+            "type": "macvlan",
+            "master": "eth0",
+            "mode": "bridge",
+            "ipam": {
+                "type": "host-local",
+		"ranges": [[
+			  {"subnet": "192.18.0.0/24",
+			   "rangeStart": "192.18.0.1",
+			   "rangeEnd": "192.18.0.254"}
+			   ]]
+            }
+        }'
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: net-attach-def-text-ifname
+  annotations:
+    k8s.v1.cni.cncf.io/networks: net-attach-def-text-ifname@test01
+spec:
+  containers:
+  - name: net-attach-def-text-ifname
+    image: docker.io/centos/tools:latest
+    command: [ "/bin/bash", "-c", "sleep infinity" ]
+
+`)
+
+func testExtendedTestdataNetworkAttachmentsNetAttachDefTextIfnameYamlBytes() ([]byte, error) {
+	return _testExtendedTestdataNetworkAttachmentsNetAttachDefTextIfnameYaml, nil
+}
+
+func testExtendedTestdataNetworkAttachmentsNetAttachDefTextIfnameYaml() (*asset, error) {
+	bytes, err := testExtendedTestdataNetworkAttachmentsNetAttachDefTextIfnameYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "test/extended/testdata/network-attachments/net-attach-def-text-ifname.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _testExtendedTestdataNetworkAttachmentsNetAttachDefTextNsYaml = []byte(`# These test case is TBD (due to namespaceIsolation default)
+---
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: net-attach-def-text-ns
+  namespace: network-attachment-definition-another1
+spec: 
+  config: '{
+            "cniVersion": "0.3.0",
+            "type": "macvlan",
+            "master": "eth0",
+            "mode": "bridge",
+            "ipam": {
+                "type": "host-local",
+		"ranges": [[
+			  {"subnet": "192.18.0.0/24",
+			   "rangeStart": "192.18.0.1",
+			   "rangeEnd": "192.18.0.254"}
+			   ]]
+            }
+        }'
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: net-attach-def-text-ns
+  annotations:
+    k8s.v1.cni.cncf.io/networks: network-attachment-definition-another1/net-attach-def-text-ns
+spec:
+  containers:
+  - name: net-attach-def-text-ns
+    image: docker.io/centos/tools:latest
+    command: [ "/bin/bash", "-c", "sleep infinity" ]
+
+`)
+
+func testExtendedTestdataNetworkAttachmentsNetAttachDefTextNsYamlBytes() ([]byte, error) {
+	return _testExtendedTestdataNetworkAttachmentsNetAttachDefTextNsYaml, nil
+}
+
+func testExtendedTestdataNetworkAttachmentsNetAttachDefTextNsYaml() (*asset, error) {
+	bytes, err := testExtendedTestdataNetworkAttachmentsNetAttachDefTextNsYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "test/extended/testdata/network-attachments/net-attach-def-text-ns.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _testExtendedTestdataNetworkAttachmentsNetAttachDefTextYaml = []byte(`---
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: net-attach-def-text
+spec: 
+  config: '{
+            "cniVersion": "0.3.0",
+            "type": "macvlan",
+            "master": "eth0",
+            "mode": "bridge",
+            "ipam": {
+                "type": "host-local",
+		"ranges": [[
+			  {"subnet": "192.18.0.0/24",
+			   "rangeStart": "192.18.0.1",
+			   "rangeEnd": "192.18.0.254"}
+			   ]]
+            }
+        }'
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: net-attach-def-text
+  annotations:
+    k8s.v1.cni.cncf.io/networks: net-attach-def-text
+spec:
+  containers:
+  - name: net-attach-def-text
+    image: docker.io/centos/tools:latest
+    command: [ "/bin/bash", "-c", "sleep infinity" ]
+
+`)
+
+func testExtendedTestdataNetworkAttachmentsNetAttachDefTextYamlBytes() ([]byte, error) {
+	return _testExtendedTestdataNetworkAttachmentsNetAttachDefTextYaml, nil
+}
+
+func testExtendedTestdataNetworkAttachmentsNetAttachDefTextYaml() (*asset, error) {
+	bytes, err := testExtendedTestdataNetworkAttachmentsNetAttachDefTextYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "test/extended/testdata/network-attachments/net-attach-def-text.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _testExtendedTestdataOauthserverCabundleCmYaml = []byte(`apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -57744,6 +58118,13 @@ var _bindata = map[string]func() (*asset, error){
 	"test/extended/testdata/long_names/fixture.json": testExtendedTestdataLong_namesFixtureJson,
 	"test/extended/testdata/multi-namespace-pipeline.yaml": testExtendedTestdataMultiNamespacePipelineYaml,
 	"test/extended/testdata/multi-namespace-template.yaml": testExtendedTestdataMultiNamespaceTemplateYaml,
+	"test/extended/testdata/network-attachments/net-attach-def-json-ifname.yaml": testExtendedTestdataNetworkAttachmentsNetAttachDefJsonIfnameYaml,
+	"test/extended/testdata/network-attachments/net-attach-def-json-mac.yaml": testExtendedTestdataNetworkAttachmentsNetAttachDefJsonMacYaml,
+	"test/extended/testdata/network-attachments/net-attach-def-json-ns.yaml": testExtendedTestdataNetworkAttachmentsNetAttachDefJsonNsYaml,
+	"test/extended/testdata/network-attachments/net-attach-def-json.yaml": testExtendedTestdataNetworkAttachmentsNetAttachDefJsonYaml,
+	"test/extended/testdata/network-attachments/net-attach-def-text-ifname.yaml": testExtendedTestdataNetworkAttachmentsNetAttachDefTextIfnameYaml,
+	"test/extended/testdata/network-attachments/net-attach-def-text-ns.yaml": testExtendedTestdataNetworkAttachmentsNetAttachDefTextNsYaml,
+	"test/extended/testdata/network-attachments/net-attach-def-text.yaml": testExtendedTestdataNetworkAttachmentsNetAttachDefTextYaml,
 	"test/extended/testdata/oauthserver/cabundle-cm.yaml": testExtendedTestdataOauthserverCabundleCmYaml,
 	"test/extended/testdata/oauthserver/oauth-network.yaml": testExtendedTestdataOauthserverOauthNetworkYaml,
 	"test/extended/testdata/oauthserver/oauth-pod.yaml": testExtendedTestdataOauthserverOauthPodYaml,
@@ -58449,6 +58830,15 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				}},
 				"multi-namespace-pipeline.yaml": &bintree{testExtendedTestdataMultiNamespacePipelineYaml, map[string]*bintree{}},
 				"multi-namespace-template.yaml": &bintree{testExtendedTestdataMultiNamespaceTemplateYaml, map[string]*bintree{}},
+				"network-attachments": &bintree{nil, map[string]*bintree{
+					"net-attach-def-json-ifname.yaml": &bintree{testExtendedTestdataNetworkAttachmentsNetAttachDefJsonIfnameYaml, map[string]*bintree{}},
+					"net-attach-def-json-mac.yaml": &bintree{testExtendedTestdataNetworkAttachmentsNetAttachDefJsonMacYaml, map[string]*bintree{}},
+					"net-attach-def-json-ns.yaml": &bintree{testExtendedTestdataNetworkAttachmentsNetAttachDefJsonNsYaml, map[string]*bintree{}},
+					"net-attach-def-json.yaml": &bintree{testExtendedTestdataNetworkAttachmentsNetAttachDefJsonYaml, map[string]*bintree{}},
+					"net-attach-def-text-ifname.yaml": &bintree{testExtendedTestdataNetworkAttachmentsNetAttachDefTextIfnameYaml, map[string]*bintree{}},
+					"net-attach-def-text-ns.yaml": &bintree{testExtendedTestdataNetworkAttachmentsNetAttachDefTextNsYaml, map[string]*bintree{}},
+					"net-attach-def-text.yaml": &bintree{testExtendedTestdataNetworkAttachmentsNetAttachDefTextYaml, map[string]*bintree{}},
+				}},
 				"oauthserver": &bintree{nil, map[string]*bintree{
 					"cabundle-cm.yaml": &bintree{testExtendedTestdataOauthserverCabundleCmYaml, map[string]*bintree{}},
 					"oauth-network.yaml": &bintree{testExtendedTestdataOauthserverOauthNetworkYaml, map[string]*bintree{}},

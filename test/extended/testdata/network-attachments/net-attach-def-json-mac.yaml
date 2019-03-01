@@ -1,0 +1,41 @@
+---
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: net-attach-def-json-mac
+spec: 
+  config: '{
+            "cniVersion": "0.3.0",
+            "name": "chains",
+            "plugins": [ {
+                "type": "macvlan",
+                "master": "eth0",
+                "mode": "bridge",
+                "ipam": {
+                    "type": "host-local",
+    		"ranges": [[
+    			  {"subnet": "192.18.0.0/24",
+    			   "rangeStart": "192.18.0.1",
+    			   "rangeEnd": "192.18.0.254"}
+    			   ]]
+                }
+              }, {
+                "type": "tuning"
+              }
+            ]
+        }'
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: net-attach-def-json-mac
+  annotations:
+    k8s.v1.cni.cncf.io/networks: '[
+            { "name": "net-attach-def-json-mac",
+              "mac": "test01" }
+    ]'
+spec:
+  containers:
+  - name: net-attach-def-json-mac
+    image: docker.io/centos/tools:latest
+    command: [ "/bin/bash", "-c", "sleep infinity" ]

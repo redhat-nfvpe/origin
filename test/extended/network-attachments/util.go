@@ -37,6 +37,7 @@ func InNetworkAttachmentContext(body func()) {
 			if !implementMultus() {
 				e2e.Skipf("This plugin does not implement NetworkAttachment, hence skipped.")
 			}
+
 		})
 
 		body()
