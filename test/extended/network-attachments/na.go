@@ -1,7 +1,6 @@
 package networkattachments
 
 import (
-	e2e "k8s.io/kubernetes/test/e2e/framework"
 	"fmt"
         exutil "github.com/openshift/origin/test/extended/util"
 
@@ -82,10 +81,5 @@ var _ = Describe("[Area:Networking] Network-attachment-definition", func() {
 		})
 */
 
-		f1 := e2e.NewDefaultFramework("multus-ds")
-
-		It("should create Multus pod on each node", func() {
-			Expect(checkMultusDaemonStatus(f1)).To(Succeed())
-		})
 	})
 })

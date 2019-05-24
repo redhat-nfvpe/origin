@@ -52721,7 +52721,7 @@ apiVersion: "k8s.cni.cncf.io/v1"
 kind: NetworkAttachmentDefinition
 metadata:
   name: net-attach-def-json-ifname
-spec: 
+spec:
   config: '{
             "cniVersion": "0.3.0",
             "type": "macvlan",
@@ -52773,7 +52773,7 @@ apiVersion: "k8s.cni.cncf.io/v1"
 kind: NetworkAttachmentDefinition
 metadata:
   name: net-attach-def-json-mac
-spec: 
+spec:
   config: '{
             "cniVersion": "0.3.0",
             "name": "chains",
@@ -52783,11 +52783,11 @@ spec:
                 "mode": "bridge",
                 "ipam": {
                     "type": "host-local",
-    		"ranges": [[
-    			  {"subnet": "192.18.0.0/24",
-    			   "rangeStart": "192.18.0.1",
-    			   "rangeEnd": "192.18.0.254"}
-    			   ]]
+                    "ranges": [[
+                          {"subnet": "192.18.0.0/24",
+                           "rangeStart": "192.18.0.1",
+                           "rangeEnd": "192.18.0.254"}
+                           ]]
                 }
               }, {
                 "type": "tuning"
@@ -52833,7 +52833,7 @@ kind: NetworkAttachmentDefinition
 metadata:
   name: net-attach-def-json-ns
   namespace: network-attachment-definition-another1
-spec: 
+spec:
   config: '{
             "cniVersion": "0.3.0",
             "type": "macvlan",
@@ -52885,7 +52885,7 @@ apiVersion: "k8s.cni.cncf.io/v1"
 kind: NetworkAttachmentDefinition
 metadata:
   name: net-attach-def-json
-spec: 
+spec:
   config: '{
             "cniVersion": "0.3.0",
             "type": "macvlan",
@@ -52936,7 +52936,7 @@ apiVersion: "k8s.cni.cncf.io/v1"
 kind: NetworkAttachmentDefinition
 metadata:
   name: net-attach-def-text-ifname
-spec: 
+spec:
   config: '{
             "cniVersion": "0.3.0",
             "type": "macvlan",
@@ -52988,7 +52988,7 @@ kind: NetworkAttachmentDefinition
 metadata:
   name: net-attach-def-text-ns
   namespace: network-attachment-definition-another1
-spec: 
+spec:
   config: '{
             "cniVersion": "0.3.0",
             "type": "macvlan",
@@ -53038,7 +53038,7 @@ apiVersion: "k8s.cni.cncf.io/v1"
 kind: NetworkAttachmentDefinition
 metadata:
   name: net-attach-def-text
-spec: 
+spec:
   config: '{
             "cniVersion": "0.3.0",
             "type": "macvlan",
