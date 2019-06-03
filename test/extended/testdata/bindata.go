@@ -208,6 +208,11 @@
 // test/extended/testdata/samplepipeline-withenvs.yaml
 // test/extended/testdata/service-serving-cert/nginx-serving-cert.conf
 // test/extended/testdata/signer-buildconfig.yaml
+// test/extended/testdata/sriovnetwork/Dockerfile
+// test/extended/testdata/sriovnetwork/debug-pod.yaml
+// test/extended/testdata/sriovnetwork/dp-daemon.yaml
+// test/extended/testdata/sriovnetwork/provision_sriov.sh
+// test/extended/testdata/sriovnetwork/provision_sriov.sh.bak
 // test/extended/testdata/templates/templateinstance_badobject.yaml
 // test/extended/testdata/templates/templateinstance_objectkinds.yaml
 // test/extended/testdata/templates/templateinstance_readiness.yaml
@@ -12147,6 +12152,344 @@ func testExtendedTestdataSignerBuildconfigYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "test/extended/testdata/signer-buildconfig.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _testExtendedTestdataSriovnetworkDockerfile = []byte(`FROM centos/tools
+
+ADD provision_sriov.sh /
+`)
+
+func testExtendedTestdataSriovnetworkDockerfileBytes() ([]byte, error) {
+	return _testExtendedTestdataSriovnetworkDockerfile, nil
+}
+
+func testExtendedTestdataSriovnetworkDockerfile() (*asset, error) {
+	bytes, err := testExtendedTestdataSriovnetworkDockerfileBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "test/extended/testdata/sriovnetwork/Dockerfile", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _testExtendedTestdataSriovnetworkDebugPodYaml = []byte(`apiVersion: v1
+kind: Pod
+metadata:
+  name: sriov-debug-pod
+spec:
+  containers:
+  - command:
+    - /bin/sh
+    image: zenghui/ocp-sriov-debug:latest
+    imagePullPolicy: Always
+    name: container-00
+    securityContext:
+      privileged: true
+      procMount: Default
+      runAsUser: 0
+    stdin: true
+    stdinOnce: true
+    tty: true
+    volumeMounts:
+    - mountPath: /host
+      name: host
+  hostNetwork: true
+  hostPID: true
+  priority: 0
+  restartPolicy: Never
+  schedulerName: default-scheduler
+  securityContext: {}
+  volumes:
+  - hostPath:
+      path: /
+      type: Directory
+    name: host
+`)
+
+func testExtendedTestdataSriovnetworkDebugPodYamlBytes() ([]byte, error) {
+	return _testExtendedTestdataSriovnetworkDebugPodYaml, nil
+}
+
+func testExtendedTestdataSriovnetworkDebugPodYaml() (*asset, error) {
+	bytes, err := testExtendedTestdataSriovnetworkDebugPodYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "test/extended/testdata/sriovnetwork/debug-pod.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _testExtendedTestdataSriovnetworkDpDaemonYaml = []byte(`---
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: sriov-device-plugin
+  annotations:
+    kubernetes.io/description: |
+      This daemon set launches the SR-IOV network device plugin on each node.
+spec:
+  selector:
+    matchLabels:
+      app: sriov-device-plugin
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: sriov-device-plugin
+        component: network
+        type: infra
+        openshift.io/component: network
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+      tolerations:
+      - operator: Exists
+      serviceAccountName: sriov-device-plugin
+      containers:
+      - name: sriov-device-plugin
+        image: quay.io/openshift/ose-sriov-network-device-plugin:v4.1.0
+        args:
+        - --log-level=10
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: devicesock
+          mountPath: /var/lib/kubelet/
+          readOnly: false
+        - name: net
+          mountPath: /sys/class/net
+          readOnly: true
+      volumes:
+        - name: devicesock
+          hostPath:
+            path: /var/lib/kubelet/
+        - name: net
+          hostPath:
+            path: /sys/class/net
+`)
+
+func testExtendedTestdataSriovnetworkDpDaemonYamlBytes() ([]byte, error) {
+	return _testExtendedTestdataSriovnetworkDpDaemonYaml, nil
+}
+
+func testExtendedTestdataSriovnetworkDpDaemonYaml() (*asset, error) {
+	bytes, err := testExtendedTestdataSriovnetworkDpDaemonYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "test/extended/testdata/sriovnetwork/dp-daemon.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _testExtendedTestdataSriovnetworkProvision_sriovSh = []byte(`#!/bin/bash
+
+# Iterate over /sys/class/net,
+# Provision VFs on interfaces with following properties:
+# 1) SR-IOV capable interface
+# 2) Link state up
+# 3) No default route configured on interface
+# 4) Of certain NIC types
+
+set -x
+
+progname=$0
+NUMVF=2
+VENDOR=
+INT=
+
+function usage () {
+   cat <<EOF
+Usage: $progname [-c num_vfs]
+EOF
+   exit 0
+}
+
+while getopts c:v:i:h FLAG; do
+   case $FLAG in
+
+   c)  echo "Creating $OPTARG VF(s)"
+       NUMVF=$OPTARG
+       ;;
+   v)  echo "Creating VF on $OPTARG card"
+       VENDOR=$OPTARG
+       ;;
+   i)  echo "Creating VF on $OPTARG interface"
+       INT=$OPTARG
+       ;;
+   h) usage ;;
+   *) usage ;;
+   esac
+done
+
+if [ -n "$INT" ]; then
+	if [ -e /sys/class/net/$INT/device/sriov_numvfs ]; then
+		if [ $(echo $NUMVF > /sys/class/net/$INT/device/sriov_numvfs) ]; then
+			exit
+		fi
+	fi
+	echo "failed to configure $NUMVF vfs on $INT interface, exiting"
+	exit 1
+fi
+
+for i in `+"`"+`ls /sys/class/net`+"`"+`
+do
+	# Skip interface without SR-IOV capability
+	if [ ! -e /sys/class/net/$i/device/sriov_numvfs ]; then
+		continue
+	fi
+
+	# Skip interface with operstate being 'down'
+	if [ $(cat /sys/class/net/$i/operstate) == 'down' ]; then
+		continue
+	fi
+
+	# Skip interface with ip configured
+	if [ $(ip route list | grep $i) ]; then
+		continue
+	fi
+
+	if [ ! $(echo $NUMVF > /sys/class/net/$i/device/sriov_numvfs) ]; then
+		echo "failed to configure $NUMVF vfs on $i interface, exiting"
+		exit 1
+	else
+		echo "successfully configured $NUMVF vfs on $i interface"
+	fi
+done
+`)
+
+func testExtendedTestdataSriovnetworkProvision_sriovShBytes() ([]byte, error) {
+	return _testExtendedTestdataSriovnetworkProvision_sriovSh, nil
+}
+
+func testExtendedTestdataSriovnetworkProvision_sriovSh() (*asset, error) {
+	bytes, err := testExtendedTestdataSriovnetworkProvision_sriovShBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "test/extended/testdata/sriovnetwork/provision_sriov.sh", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _testExtendedTestdataSriovnetworkProvision_sriovShBak = []byte(`#!/bin/bash
+
+# Iterate over /sys/class/net,
+# Provision VFs on interfaces with following properties:
+# 1) SR-IOV capable interface
+# 2) Link state up
+# 3) No default route configured on interface
+# 4) Of certain NIC types
+
+set -x
+
+progname=$0
+NUMVF=2
+VENDOR=""
+INT=""
+
+function usage () {
+   cat <<EOF
+Usage: $progname [-c num_vfs]
+EOF
+   exit 0
+}
+
+while getopts c:v:i: FLAG; do
+   case $FLAG in
+
+   c)  echo "Creating $OPTARG VF(s)" 
+       NUMVF=$OPTARG
+       ;;
+   v)  echo "Creating VF on $OPTARG card" 
+       VENDOR=$OPTARG
+       ;;
+   i)  echo "Creating VF on $OPTARG interface" 
+       INT=$OPTARG
+       ;;
+   h)  usage ;;
+   \?) usage ;;
+   esac
+done
+
+function isSriovCapable() {
+	dev=$1
+	if [ -e /sys/class/net/$dev/device/sriov_numvfs ]; then
+		return true
+	fi
+	return false
+}
+
+function isLinkUp() {
+	dev=$1
+	if [ $(cat /sys/class/net/$dev/operstate) == 'up' ]; then
+		return true
+	fi
+	return false
+}
+
+function hasIP() {
+	dev=$1
+	if [ $(ip route list | grep $dev ) ]; then
+		return true
+	fi
+	return false
+}
+
+function configVF() {
+	dev=$1
+	num=$2
+	if [ $(echo $num > /sys/class/net/$dev/device/sriov_numvfs) ]; then
+		return true
+	fi
+	return false
+}
+
+#for i in `+"`"+`ls /sys/class/net`+"`"+`
+#do
+#
+#	# Skip interface without SR-IOV capability
+#	if [ ! -e /sys/class/net/$i/device/sriov_numvfs ]; then
+#		continue
+#	fi
+#
+#	# Skip interface with operstate being 'down'
+#	if [ $(cat /sys/class/net/$i/operstate) == 'down' ]; then
+#		continue
+#	fi
+#
+#	# Skip interface with ip configured
+#	if [ $(ip route list | grep $i) ]; then
+#		continue
+#	fi
+#
+#	if [ ! $(echo $NUMVF > /sys/class/net/$i/device/sriov_numvfs) ]; then
+#		exit 1
+#	fi
+#done
+`)
+
+func testExtendedTestdataSriovnetworkProvision_sriovShBakBytes() ([]byte, error) {
+	return _testExtendedTestdataSriovnetworkProvision_sriovShBak, nil
+}
+
+func testExtendedTestdataSriovnetworkProvision_sriovShBak() (*asset, error) {
+	bytes, err := testExtendedTestdataSriovnetworkProvision_sriovShBakBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "test/extended/testdata/sriovnetwork/provision_sriov.sh.bak", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -32776,6 +33119,11 @@ var _bindata = map[string]func() (*asset, error){
 	"test/extended/testdata/samplepipeline-withenvs.yaml": testExtendedTestdataSamplepipelineWithenvsYaml,
 	"test/extended/testdata/service-serving-cert/nginx-serving-cert.conf": testExtendedTestdataServiceServingCertNginxServingCertConf,
 	"test/extended/testdata/signer-buildconfig.yaml": testExtendedTestdataSignerBuildconfigYaml,
+	"test/extended/testdata/sriovnetwork/Dockerfile": testExtendedTestdataSriovnetworkDockerfile,
+	"test/extended/testdata/sriovnetwork/debug-pod.yaml": testExtendedTestdataSriovnetworkDebugPodYaml,
+	"test/extended/testdata/sriovnetwork/dp-daemon.yaml": testExtendedTestdataSriovnetworkDpDaemonYaml,
+	"test/extended/testdata/sriovnetwork/provision_sriov.sh": testExtendedTestdataSriovnetworkProvision_sriovSh,
+	"test/extended/testdata/sriovnetwork/provision_sriov.sh.bak": testExtendedTestdataSriovnetworkProvision_sriovShBak,
 	"test/extended/testdata/templates/templateinstance_badobject.yaml": testExtendedTestdataTemplatesTemplateinstance_badobjectYaml,
 	"test/extended/testdata/templates/templateinstance_objectkinds.yaml": testExtendedTestdataTemplatesTemplateinstance_objectkindsYaml,
 	"test/extended/testdata/templates/templateinstance_readiness.yaml": testExtendedTestdataTemplatesTemplateinstance_readinessYaml,
@@ -33283,6 +33631,13 @@ var _bintree = &bintree{nil, map[string]*bintree{
 					"nginx-serving-cert.conf": &bintree{testExtendedTestdataServiceServingCertNginxServingCertConf, map[string]*bintree{}},
 				}},
 				"signer-buildconfig.yaml": &bintree{testExtendedTestdataSignerBuildconfigYaml, map[string]*bintree{}},
+				"sriovnetwork": &bintree{nil, map[string]*bintree{
+					"Dockerfile": &bintree{testExtendedTestdataSriovnetworkDockerfile, map[string]*bintree{}},
+					"debug-pod.yaml": &bintree{testExtendedTestdataSriovnetworkDebugPodYaml, map[string]*bintree{}},
+					"dp-daemon.yaml": &bintree{testExtendedTestdataSriovnetworkDpDaemonYaml, map[string]*bintree{}},
+					"provision_sriov.sh": &bintree{testExtendedTestdataSriovnetworkProvision_sriovSh, map[string]*bintree{}},
+					"provision_sriov.sh.bak": &bintree{testExtendedTestdataSriovnetworkProvision_sriovShBak, map[string]*bintree{}},
+				}},
 				"templates": &bintree{nil, map[string]*bintree{
 					"templateinstance_badobject.yaml": &bintree{testExtendedTestdataTemplatesTemplateinstance_badobjectYaml, map[string]*bintree{}},
 					"templateinstance_objectkinds.yaml": &bintree{testExtendedTestdataTemplatesTemplateinstance_objectkindsYaml, map[string]*bintree{}},
