@@ -6,7 +6,6 @@ import (
 	"time"
 
         exutil "github.com/openshift/origin/test/extended/util"
-	corev1 "k8s.io/api/core/v1"
 	e2e "k8s.io/kubernetes/test/e2e/framework"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -30,72 +29,45 @@ var _ = Describe("[Area:Networking] SRIOV Network Device Plugin", func() {
 
 			By("Waiting for SRIOV daemonsets become ready")
 			err = wait.PollImmediate(e2e.Poll, 3*time.Minute, func() (bool, error) {
-				ds, err := f1.ClientSet.AppsV1().DaemonSets(oc.Namespace()).
-					Get("sriov-device-plugin", metav1.GetOptions{})
+				err = CheckSRIOVDaemonStatus(f1, oc.Namespace(), "sriov-device-plugin")
 				if err != nil {
 					return false, nil
 				}
-
-				desired := ds.Status.DesiredNumberScheduled
-				scheduled := ds.Status.CurrentNumberScheduled
-				ready := ds.Status.NumberReady
-				return (desired == scheduled && desired == ready), nil
+				return true, nil
 			})
 			Expect(err).NotTo(HaveOccurred())
 
 			By("Deleting SRIOV device plugin daemonset")
 			err = oc.AsAdmin().Run("delete").Args("-f", DevicePluginDaemonFixture).Execute()
 			Expect(err).NotTo(HaveOccurred())
-
-			By("Waiting for SRIOV daemonsets disappear")
-			err = wait.PollImmediate(e2e.Poll, 3*time.Minute, func() (bool, error) {
-				_, err := f1.ClientSet.AppsV1().DaemonSets(oc.Namespace()).
-					Get("sriov-device-plugin", metav1.GetOptions{})
-				if err != nil {
-					return true, nil
-				}
-				return false, nil
-			})
-			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("should successfully create SRIOV VFs", func() {
-			DebugPodFixture := exutil.FixturePath("testdata", "sriovnetwork", "debug-pod.yaml")
 			DevicePluginDaemonFixture := exutil.FixturePath("testdata",
 				"sriovnetwork", "dp-daemon.yaml")
 
-			By("Creating Debug pod")
-			err := oc.AsAdmin().Run("create").Args("-f", DebugPodFixture).Execute()
+			err := CreateDebugPod(oc)
 			Expect(err).NotTo(HaveOccurred())
 
-			By("Waiting for debug pod become ready")
-			err = wait.PollImmediate(e2e.Poll, 3*time.Minute, func() (bool, error) {
-				pod, err := oc.AdminKubeClient().CoreV1().Pods(oc.Namespace()).
-					Get("sriov-debug-pod", metav1.GetOptions{})
-				if err != nil {
-					return false, nil
-				}
-				return (pod.Status.Phase == corev1.PodRunning),nil
-			})
+			err = DebugListHostInt(oc)
 			Expect(err).NotTo(HaveOccurred())
-
-			pod, err := oc.AdminKubeClient().CoreV1().Pods(oc.Namespace()).
-				Get("sriov-debug-pod", metav1.GetOptions{})
-			out, err := oc.AsAdmin().Run("exec").Args(pod.Name, "-c", pod.Spec.Containers[0].Name,
-				"--", "ls", "/sys/class/net/").Output()
-
-			By(fmt.Sprintf("ls /sys/class/net/ output: %s ", out))
-			Expect(err).NotTo(HaveOccurred())
-			Expect(out).To(ContainSubstring("lo"))
 
 			sriovNodes := make([]string, 0)
 			options := metav1.ListOptions{LabelSelector: "node-role.kubernetes.io/worker="}
 			workerNodes, _ := f1.ClientSet.CoreV1().Nodes().List(options)
+
+			pod, err := oc.AdminKubeClient().CoreV1().Pods(oc.Namespace()).
+				Get(debugPodName, metav1.GetOptions{})
+			Expect(err).NotTo(HaveOccurred())
+
 			for _, n := range workerNodes.Items {
-				out, err = oc.AsAdmin().Run("exec").Args(pod.Name,
+				out, err := oc.AsAdmin().Run("exec").Args(pod.Name,
 					"-c", pod.Spec.Containers[0].Name,
 					"--", "/provision_sriov.sh", "-c", "2").Output()
+
+				Expect(err).NotTo(HaveOccurred())
 				By(fmt.Sprintf("provision_sriov.sh output: %s ", out))
+
 				if strings.Contains(out, "successfully configured") {
 					sriovNodes = append(sriovNodes, n.GetName())
 				} else if strings.Contains(out, "failed to configure") {
@@ -113,22 +85,17 @@ var _ = Describe("[Area:Networking] SRIOV Network Device Plugin", func() {
 
 				By("Waiting for SRIOV daemonsets become ready")
 				err = wait.PollImmediate(e2e.Poll, 3*time.Minute, func() (bool, error) {
-					ds, err := f1.ClientSet.AppsV1().DaemonSets(oc.Namespace()).
-						Get("sriov-device-plugin", metav1.GetOptions{})
+					err = CheckSRIOVDaemonStatus(f1, oc.Namespace(), "sriov-device-plugin")
 					if err != nil {
 						return false, nil
 					}
-
-					desired := ds.Status.DesiredNumberScheduled
-					scheduled := ds.Status.CurrentNumberScheduled
-					ready := ds.Status.NumberReady
-					return (desired == scheduled && desired == ready), nil
+					return true, nil
 				})
 				Expect(err).NotTo(HaveOccurred())
 			}
 
 			for _, n := range sriovNodes {
-				out, err = oc.AsAdmin().Run("get").Args("node", n).
+				out, err := oc.AsAdmin().Run("get").Args("node", n).
 					Template("{{ .status.allocatable }}").Output()
 				Expect(err).NotTo(HaveOccurred())
 				By(fmt.Sprintf("Node %s allocatable output: %s", n, out))
