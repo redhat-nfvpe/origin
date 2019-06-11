@@ -11,7 +11,8 @@ set -x
 
 progname=$0
 NUMVF=2
-VENDOR=
+VENDORID=
+DEVICEID=
 INT=
 
 function usage () {
@@ -21,14 +22,17 @@ EOF
    exit 0
 }
 
-while getopts c:v:i:h FLAG; do
+while getopts c:v:i:d:h FLAG; do
    case $FLAG in
 
    c)  echo "Creating $OPTARG VF(s)"
        NUMVF=$OPTARG
        ;;
-   v)  echo "Creating VF on $OPTARG card"
-       VENDOR=$OPTARG
+   v)  echo "Vendor ID specified $OPTARG"
+       VENDORID=$OPTARG
+       ;;
+   d)  echo "Device ID specified $OPTARG"
+       DEVICEID=$OPTARG
        ;;
    i)  echo "Creating VF on $OPTARG interface"
        INT=$OPTARG
@@ -61,14 +65,25 @@ do
 	fi
 
 	# Skip interface with ip configured
-	if [ $(ip route list | grep $i) ]; then
+	if [ $(ip route list | grep -q $i) ]; then
 		continue
 	fi
 
-	if [ ! $(echo $NUMVF > /sys/class/net/$i/device/sriov_numvfs) ]; then
+	# Skip interface not from vendor id
+	if [ "$(cat /sys/class/net/$i/device/vendor)" != "$VENDORID" ]; then
+		continue
+	fi
+
+	# Skip interface not with device id
+	if [ "$(cat /sys/class/net/$i/device/device)" != "$DEVICEID" ]; then
+		continue
+	fi
+
+	if [ $(echo $NUMVF > /sys/class/net/$i/device/sriov_numvfs) ]; then
 		echo "failed to configure $NUMVF vfs on $i interface, exiting"
 		exit 1
 	else
 		echo "successfully configured $NUMVF vfs on $i interface"
+		exit
 	fi
 done

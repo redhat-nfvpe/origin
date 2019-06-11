@@ -63,7 +63,8 @@ var _ = Describe("[Area:Networking] SRIOV Network Device Plugin", func() {
 			for _, n := range workerNodes.Items {
 				out, err := oc.AsAdmin().Run("exec").Args(pod.Name,
 					"-c", pod.Spec.Containers[0].Name,
-					"--", "/provision_sriov.sh", "-c", "2").Output()
+					"--", "/provision_sriov.sh", "-c", "2",
+					"-v", "0x8086", "-d", "0x158b").Output()
 
 				Expect(err).NotTo(HaveOccurred())
 				By(fmt.Sprintf("provision_sriov.sh output: %s ", out))
