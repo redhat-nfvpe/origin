@@ -1,4 +1,10 @@
 ---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sriov-device-plugin
+
+---
 kind: DaemonSet
 apiVersion: apps/v1
 metadata:
@@ -28,7 +34,7 @@ spec:
       serviceAccountName: sriov-device-plugin
       containers:
       - name: sriov-device-plugin
-        image: quay.io/openshift/ose-sriov-network-device-plugin:v4.1.0
+        image: quay.io/openshift/ose-sriov-network-device-plugin:v4.2.0
         args:
         - --log-level=10
         securityContext:
@@ -37,13 +43,15 @@ spec:
         - name: devicesock
           mountPath: /var/lib/kubelet/
           readOnly: false
-        - name: net
-          mountPath: /sys/class/net
-          readOnly: true
+        - name: config-volume
+          mountPath: /etc/pcidp
       volumes:
         - name: devicesock
           hostPath:
             path: /var/lib/kubelet/
-        - name: net
-          hostPath:
-            path: /sys/class/net
+        - name: config-volume
+          configMap:
+            name: sriovdp-config
+            items:
+            - key: config.json
+              path: config.json

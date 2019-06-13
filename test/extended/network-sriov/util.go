@@ -16,8 +16,50 @@ import (
 )
 
 const (
-	debugPodName = "sriov-debug-pod"
+	debugPodName     = "sriov-debug-pod"
+	debugPodSpec     = "debug-pod.yaml"
+	sriovDPPodName   = "sriov-device-plugin"
+	sriovDPSpec      = "dp-daemon.yaml"
+	sriovDPConfigMap = "config-map.yaml"
+	sriovNumVFs      = "4"
 )
+
+var (
+	DebugPodFixture = exutil.FixturePath("testdata", "sriovnetwork", debugPodSpec)
+	DevicePluginDaemonFixture = exutil.FixturePath("testdata", "sriovnetwork", sriovDPSpec)
+	DevicePluginConfigFixture = exutil.FixturePath("testdata", "sriovnetwork", sriovDPConfigMap)
+)
+
+type ResourceConfig struct {
+	NodeName	string	`json:"nodeName"`
+	ResourceName	string	`json:"resourceName"`
+	ResourceNum	string	`json:"resourceNum"`
+}
+
+// ResourceConfList is a list of ResourceConfig
+type ResourceConfList struct {
+	ResourceList []ResourceConfig `json:"resourceConfig"`
+}
+
+type Matrix struct {
+	VendorID	string	`json:"vendorid"`
+	DeviceID	string	`json:"deviceid"`
+	ResourceName	string	`json:"resourceName"`
+}
+
+type NICMatrix struct {
+	NICs	[]Matrix	`json:"matrix"`
+}
+
+func InitNICMatrix() *NICMatrix {
+	return &NICMatrix{
+		NICs: []Matrix{
+			{VendorID: "0x8086", DeviceID: "0x158b", ResourceName: "intel_XXV710"},
+			{VendorID: "0x15b3", DeviceID: "0x1015", ResourceName: "mlx_ConnectX4_Lx"},
+			{VendorID: "0x15b3", DeviceID: "0x1017", ResourceName: "mlx_ConnectX5"},
+		},
+	}
+}
 
 func implementMultus() bool {
 	// We don't use exutil.NewCLI() here because it can't be called from BeforeEach()
@@ -67,8 +109,6 @@ func DebugListHostInt(oc *exutil.CLI) error {
 
 func CreateDebugPod(oc *exutil.CLI) error {
 	By("Creating Debug pod")
-	DebugPodFixture := exutil.FixturePath("testdata", "sriovnetwork", "debug-pod.yaml")
-
 	err := oc.AsAdmin().Run("create").Args("-f", DebugPodFixture).Execute()
 	if err != nil {
 		return err

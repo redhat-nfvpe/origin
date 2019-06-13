@@ -22,14 +22,18 @@ var _ = Describe("[Area:Networking] SRIOV Network Device Plugin", func() {
 		f1 := oc.KubeFramework()
 
 		It("should successfully create/delete SRIOV device plugin daemonsets", func() {
-			DevicePluginDaemonFixture := exutil.FixturePath("testdata", "sriovnetwork", "dp-daemon.yaml")
+
+			By("Creating SRIOV device plugin config map")
+			err := oc.AsAdmin().Run("create").Args("-f", DevicePluginConfigFixture).Execute()
+			Expect(err).NotTo(HaveOccurred())
+
 			By("Creating SRIOV device plugin daemonset")
-			err := oc.AsAdmin().Run("create").Args("-f", DevicePluginDaemonFixture).Execute()
+			err = oc.AsAdmin().Run("create").Args("-f", DevicePluginDaemonFixture).Execute()
 			Expect(err).NotTo(HaveOccurred())
 
 			By("Waiting for SRIOV daemonsets become ready")
 			err = wait.PollImmediate(e2e.Poll, 3*time.Minute, func() (bool, error) {
-				err = CheckSRIOVDaemonStatus(f1, oc.Namespace(), "sriov-device-plugin")
+				err = CheckSRIOVDaemonStatus(f1, oc.Namespace(), sriovDPPodName)
 				if err != nil {
 					return false, nil
 				}
@@ -42,17 +46,17 @@ var _ = Describe("[Area:Networking] SRIOV Network Device Plugin", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		It("should successfully create SRIOV VFs", func() {
-			DevicePluginDaemonFixture := exutil.FixturePath("testdata",
-				"sriovnetwork", "dp-daemon.yaml")
+		It("should report correct SRIOV VF numbers", func() {
 
+			By("Creating SRIOV debug pod")
 			err := CreateDebugPod(oc)
 			Expect(err).NotTo(HaveOccurred())
 
+			By("Debug list host interfaces")
 			err = DebugListHostInt(oc)
 			Expect(err).NotTo(HaveOccurred())
 
-			sriovNodes := make([]string, 0)
+			By("Get all worker nodes")
 			options := metav1.ListOptions{LabelSelector: "node-role.kubernetes.io/worker="}
 			workerNodes, _ := f1.ClientSet.CoreV1().Nodes().List(options)
 
@@ -60,46 +64,61 @@ var _ = Describe("[Area:Networking] SRIOV Network Device Plugin", func() {
 				Get(debugPodName, metav1.GetOptions{})
 			Expect(err).NotTo(HaveOccurred())
 
+			resConfList := ResourceConfList{}
+			nicMatrix := InitNICMatrix()
+
+			By("Provision SR-IOV on worker nodes")
 			for _, n := range workerNodes.Items {
-				out, err := oc.AsAdmin().Run("exec").Args(pod.Name,
-					"-c", pod.Spec.Containers[0].Name,
-					"--", "/provision_sriov.sh", "-c", "2",
-					"-v", "0x8086", "-d", "0x158b").Output()
+				for _, dev := range nicMatrix.NICs {
+					out, err := oc.AsAdmin().Run("exec").Args(pod.Name,
+						"-c", pod.Spec.Containers[0].Name,
+						"--", "/provision_sriov.sh", "-c", sriovNumVFs,
+						"-v", dev.VendorID, "-d", dev.DeviceID).Output()
 
-				Expect(err).NotTo(HaveOccurred())
-				By(fmt.Sprintf("provision_sriov.sh output: %s ", out))
+					Expect(err).NotTo(HaveOccurred())
+					By(fmt.Sprintf("provision_sriov.sh output: %s ", out))
 
-				if strings.Contains(out, "successfully configured") {
-					sriovNodes = append(sriovNodes, n.GetName())
-				} else if strings.Contains(out, "failed to configure") {
-					e2e.Failf("Unable to provision SR-IOV VFs on node %s", n.GetName())
-				} else {
-					e2e.Skipf("Skipping node %s as it doesn't contain SR-IOV capable NIC.",
-						n.GetName())
+					if strings.Contains(out, "successfully configured") {
+						resConfList.ResourceList = append(resConfList.ResourceList,
+							ResourceConfig{
+							NodeName: n.GetName(),
+							ResourceNum: sriovNumVFs,
+							ResourceName: dev.ResourceName})
+					} else if strings.Contains(out, "failed to configure") {
+						e2e.Failf("Unable to provision SR-IOV VFs on node %s", n.GetName())
+					} else {
+						e2e.Logf("Skipping node %s.", n.GetName())
+					}
 				}
 			}
 
-			if len(sriovNodes) > 0 {
+			if len(resConfList.ResourceList) > 0 {
+				By("Creating SRIOV device plugin config map")
+				err = oc.AsAdmin().Run("create").Args("-f", DevicePluginConfigFixture).Execute()
+				Expect(err).NotTo(HaveOccurred())
+
 				By("Creating SRIOV device plugin daemonset")
 				err = oc.AsAdmin().Run("create").Args("-f", DevicePluginDaemonFixture).Execute()
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Waiting for SRIOV daemonsets become ready")
 				err = wait.PollImmediate(e2e.Poll, 3*time.Minute, func() (bool, error) {
-					err = CheckSRIOVDaemonStatus(f1, oc.Namespace(), "sriov-device-plugin")
+					err = CheckSRIOVDaemonStatus(f1, oc.Namespace(), sriovDPPodName)
 					if err != nil {
 						return false, nil
 					}
 					return true, nil
 				})
 				Expect(err).NotTo(HaveOccurred())
+			} else {
+				e2e.Skipf("Skipping, no SR-IOV capable NIC configured.")
 			}
 
-			for _, n := range sriovNodes {
-				out, err := oc.AsAdmin().Run("get").Args("node", n).
+			for _, n := range resConfList.ResourceList {
+				out, err := oc.AsAdmin().Run("get").Args("node", n.NodeName).
 					Template("{{ .status.allocatable }}").Output()
 				Expect(err).NotTo(HaveOccurred())
-				By(fmt.Sprintf("Node %s allocatable output: %s", n, out))
+				By(fmt.Sprintf("Node %s allocatable output: %s", n.NodeName, out))
 			}
 		})
 	})
