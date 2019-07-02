@@ -12313,13 +12313,17 @@ spec:
       nodeSelector:
         beta.kubernetes.io/os: linux
       tolerations:
-      - operator: Exists
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
       serviceAccountName: sriov-device-plugin
       containers:
       - name: sriov-device-plugin
-        image: quay.io/openshift/ose-sriov-network-device-plugin:v4.2.0
+        #image: quay.io/openshift/ose-sriov-network-device-plugin:v4.2.0
+        image: nfvpe/sriov-device-plugin
         args:
         - --log-level=10
+        - --resource-prefix=openshift.com
         securityContext:
           privileged: true
         volumeMounts:
@@ -12436,13 +12440,23 @@ do
 		continue
 	fi
 
-	if [ $(echo $NUMVF > /sys/class/net/$i/device/sriov_numvfs) ]; then
-		echo "failed to configure $NUMVF vfs on $i interface, exiting"
-		exit 1
-	else
-		echo "successfully configured $NUMVF vfs on $i interface"
+	# Reset VF num
+        chroot /host /bin/bash -c "echo 0 > /sys/class/net/$i/device/sriov_numvfs"
+        if [ $? == 0 ]; then
+                echo "successfully configured 0 vfs on $i interface"
+        else
+                echo "failed to configure 0 vfs on $i interface, exiting"
+                exit 1
+        fi
+
+        chroot /host /bin/bash -c "echo $NUMVF > /sys/class/net/$i/device/sriov_numvfs"
+        if [ $? == 0 ]; then
+                echo "successfully configured $NUMVF vfs on $i interface"
 		exit
-	fi
+        else
+                echo "failed to configure $NUMVF vfs on $i interface, exiting"
+                exit 1
+        fi
 done
 `)
 

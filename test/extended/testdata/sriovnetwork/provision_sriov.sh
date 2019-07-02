@@ -79,11 +79,21 @@ do
 		continue
 	fi
 
-	if [ $(echo $NUMVF > /sys/class/net/$i/device/sriov_numvfs) ]; then
-		echo "failed to configure $NUMVF vfs on $i interface, exiting"
-		exit 1
-	else
-		echo "successfully configured $NUMVF vfs on $i interface"
+	# Reset VF num
+        chroot /host /bin/bash -c "echo 0 > /sys/class/net/$i/device/sriov_numvfs"
+        if [ $? == 0 ]; then
+                echo "successfully configured 0 vfs on $i interface"
+        else
+                echo "failed to configure 0 vfs on $i interface, exiting"
+                exit 1
+        fi
+
+        chroot /host /bin/bash -c "echo $NUMVF > /sys/class/net/$i/device/sriov_numvfs"
+        if [ $? == 0 ]; then
+                echo "successfully configured $NUMVF vfs on $i interface"
 		exit
-	fi
+        else
+                echo "failed to configure $NUMVF vfs on $i interface, exiting"
+                exit 1
+        fi
 done

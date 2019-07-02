@@ -30,13 +30,17 @@ spec:
       nodeSelector:
         beta.kubernetes.io/os: linux
       tolerations:
-      - operator: Exists
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
       serviceAccountName: sriov-device-plugin
       containers:
       - name: sriov-device-plugin
-        image: quay.io/openshift/ose-sriov-network-device-plugin:v4.2.0
+        #image: quay.io/openshift/ose-sriov-network-device-plugin:v4.2.0
+        image: nfvpe/sriov-device-plugin
         args:
         - --log-level=10
+        - --resource-prefix=openshift.com
         securityContext:
           privileged: true
         volumeMounts:
