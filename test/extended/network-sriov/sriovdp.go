@@ -86,6 +86,7 @@ var _ = Describe("[Area:Networking] SRIOV Network Device Plugin", func() {
 							NodeName: n.GetName(),
 							ResourceNum: sriovNumVFs,
 							ResourceName: dev.ResourceName})
+
 					} else if strings.Contains(out, "failed to configure") {
 						e2e.Failf("Unable to provision SR-IOV VFs on node %s", n.GetName())
 					} else {
@@ -95,6 +96,13 @@ var _ = Describe("[Area:Networking] SRIOV Network Device Plugin", func() {
 			}
 
 			if len(resConfList.ResourceList) > 0 {
+				for _, dev := range nicMatrix.NICs {
+					By("Creating SR-IOV CRDs")
+					err = oc.AsAdmin().Run("create").
+						Args("-f", fmt.Sprintf("%s/crd-%s.yaml",
+						TestDataFixture, dev.ResourceName)).Execute()
+					Expect(err).NotTo(HaveOccurred())
+				}
 				By("Creating SRIOV device plugin config map")
 				err = oc.AsAdmin().Run("create").
 					Args("-f", DevicePluginConfigFixture, "-n", "kube-system").Execute()
@@ -120,6 +128,13 @@ var _ = Describe("[Area:Networking] SRIOV Network Device Plugin", func() {
 
                         defer func() {
                                 if len(resConfList.ResourceList) > 0 {
+					for _, dev := range nicMatrix.NICs {
+						By("Deleting SR-IOV CRDs")
+						err = oc.AsAdmin().Run("delete").
+							Args("-f", fmt.Sprintf("%s/crd-%s.yaml",
+							TestDataFixture, dev.ResourceName)).Execute()
+						Expect(err).NotTo(HaveOccurred())
+					}
                                         By("Deleting SRIOV device plugin daemonset")
                                         err = oc.AsAdmin().Run("delete").
                                                 Args("-f", DevicePluginDaemonFixture, "-n", "kube-system").
@@ -144,6 +159,30 @@ var _ = Describe("[Area:Networking] SRIOV Network Device Plugin", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(out).To(Equal(fmt.Sprintf("'%s'", n.ResourceNum)))
 				By(fmt.Sprintf("Node %s allocatable output: %s", n.NodeName, out))
+			}
+
+
+			for _, n := range resConfList.ResourceList {
+				By("Creating SRIOV Test Pod")
+				err = oc.AsAdmin().Run("create").
+					Args("-f", fmt.Sprintf("%s/pod-%s.yaml",
+					TestDataFixture, n.ResourceName)).Execute()
+				Expect(err).NotTo(HaveOccurred())
+				defer func {
+					err = oc.AsAdmin().Run("delete").
+						Args("-f", fmt.Sprintf("%s/pod-%s.yaml",
+						TestDataFixture, n.ResourceName)).Execute()
+				}
+
+				By("Waiting for testpod become ready")
+				err = wait.PollImmediate(e2e.Poll, 3*time.Minute, func() (bool, error) {
+					err = CheckPodStatus(oc, "testpod")
+					if err != nil {
+						return false, nil
+					}
+					return true, nil
+				})
+				Expect(err).NotTo(HaveOccurred())
 			}
 		})
 	})

@@ -25,6 +25,7 @@ const (
 )
 
 var (
+	TestDataFixture = exutil.FixturePath("testdata", "sriovnetwork")
 	DebugPodFixture = exutil.FixturePath("testdata", "sriovnetwork", debugPodSpec)
 	DevicePluginDaemonFixture = exutil.FixturePath("testdata", "sriovnetwork", sriovDPSpec)
 	DevicePluginConfigFixture = exutil.FixturePath("testdata", "sriovnetwork", sriovDPConfigMap)

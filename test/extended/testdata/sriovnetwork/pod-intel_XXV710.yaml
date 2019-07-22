@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: testpod
+  annotations:
+    k8s.v1.cni.cncf.io/networks: sriov-net-intel-XXV710
+spec:
+  containers:
+  - name: appcntr
+    image: centos/tools 
+    imagePullPolicy: IfNotPresent
+    command: [ "/bin/bash", "-c", "--" ]
+    args: [ "while true; do sleep 300000; done;" ]
+    resources:
+      requests:
+        openshift.com/intel_XXV710: '1' 
+      limits:
+        openshift.com/intel_XXV710: '1'
