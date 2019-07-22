@@ -6,7 +6,7 @@ data:
   config.json: |
     {
         "resourceList": [{
-                "resourceName": "intel_dpdk_XXV710",
+                "resourceName": "intelxxv710dpdk",
                 "selectors": {
                     "vendors": ["8086"],
                     "devices": ["154c"],
@@ -14,21 +14,21 @@ data:
                 }
             },
             {
-                "resourceName": "intel_XXV710",
+                "resourceName": "intelxxv710",
                 "selectors": {
                     "vendors": ["8086"],
                     "devices": ["154c"]
                 }
             },
             {
-                "resourceName": "mlx_ConnectX5",
+                "resourceName": "mlx5",
                 "selectors": {
                     "vendors": ["15b3"],
                     "devices": ["1018"]
                 }
             },
             {
-                "resourceName": "mlx_ConnectX4_Lx",
+                "resourceName": "mlx4lx",
                 "selectors": {
                     "vendors": ["15b3"],
                     "devices": ["1016"]

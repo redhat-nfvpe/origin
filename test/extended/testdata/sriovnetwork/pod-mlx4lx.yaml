@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: testpod
+  name: testpod-mlx4lx
   annotations:
-    k8s.v1.cni.cncf.io/networks: sriov-net-ConnectX4-Lx
+    k8s.v1.cni.cncf.io/networks: sriov-net-connectx4-lx
 spec:
   containers:
   - name: appcntr
@@ -13,6 +13,6 @@ spec:
     args: [ "while true; do sleep 300000; done;" ]
     resources:
       requests:
-        openshift.com/mlx_ConnectX4_Lx: '1' 
+        openshift.com/mlx4lx: '1' 
       limits:
-        openshift.com/mlx_ConnectX4_Lx: '1'
+        openshift.com/mlx4lx: '1'

@@ -1,9 +1,9 @@
 apiVersion: "k8s.cni.cncf.io/v1"
 kind: NetworkAttachmentDefinition
 metadata:
-  name: sriov-net-ConnectX4-Lx
+  name: sriov-net-mlx-connectx5-suffix
   annotations:
-    k8s.v1.cni.cncf.io/resourceName: openshift.com/mlx_ConnectX4_Lx
+    k8s.v1.cni.cncf.io/resourceName: openshift.com/mlx5
 spec:
   config: '{
   "type": "sriov",

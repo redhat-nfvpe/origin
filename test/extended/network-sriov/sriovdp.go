@@ -168,15 +168,10 @@ var _ = Describe("[Area:Networking] SRIOV Network Device Plugin", func() {
 					Args("-f", fmt.Sprintf("%s/pod-%s.yaml",
 					TestDataFixture, n.ResourceName)).Execute()
 				Expect(err).NotTo(HaveOccurred())
-				defer func {
-					err = oc.AsAdmin().Run("delete").
-						Args("-f", fmt.Sprintf("%s/pod-%s.yaml",
-						TestDataFixture, n.ResourceName)).Execute()
-				}
 
 				By("Waiting for testpod become ready")
 				err = wait.PollImmediate(e2e.Poll, 3*time.Minute, func() (bool, error) {
-					err = CheckPodStatus(oc, "testpod")
+					err = CheckPodStatus(oc, fmt.Sprintf("testpod-%s", n.ResourceName))
 					if err != nil {
 						return false, nil
 					}
@@ -184,6 +179,13 @@ var _ = Describe("[Area:Networking] SRIOV Network Device Plugin", func() {
 				})
 				Expect(err).NotTo(HaveOccurred())
 			}
+
+			defer func() {
+				for _, n := range resConfList.ResourceList {
+					oc.AsAdmin().Run("delete").Args("-f", fmt.Sprintf("%s/pod-%s.yaml",
+						TestDataFixture, n.ResourceName)).Execute()
+				}
+			}()
 		})
 	})
 })

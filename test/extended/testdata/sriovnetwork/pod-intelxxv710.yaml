@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: testpod
+  name: testpod-intelxxv710
   annotations:
-    k8s.v1.cni.cncf.io/networks: sriov-net-mlx-ConnectX5
+    k8s.v1.cni.cncf.io/networks: sriov-net-intel-xxv710-suffix
 spec:
   containers:
   - name: appcntr
@@ -13,6 +13,6 @@ spec:
     args: [ "while true; do sleep 300000; done;" ]
     resources:
       requests:
-        openshift.com/mlx_ConnectX5: '1' 
+        openshift.com/intelxxv710: '1' 
       limits:
-        openshift.com/mlx_ConnectX5: '1'
+        openshift.com/intelxxv710: '1'
