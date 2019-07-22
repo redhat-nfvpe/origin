@@ -118,6 +118,22 @@ var _ = Describe("[Area:Networking] SRIOV Network Device Plugin", func() {
 				e2e.Skipf("Skipping, no SR-IOV capable NIC configured.")
 			}
 
+                        defer func() {
+                                if len(resConfList.ResourceList) > 0 {
+                                        By("Deleting SRIOV device plugin daemonset")
+                                        err = oc.AsAdmin().Run("delete").
+                                                Args("-f", DevicePluginDaemonFixture, "-n", "kube-system").
+						Execute()
+                                        Expect(err).NotTo(HaveOccurred())
+
+                                        By("Deleting SRIOV device plugin config map")
+                                        err = oc.AsAdmin().Run("delete").
+                                                Args("-f", DevicePluginConfigFixture, "-n", "kube-system").
+						Execute()
+                                        Expect(err).NotTo(HaveOccurred())
+                                }
+                        }()
+
 			time.Sleep(1 * time.Minute)
 			for _, n := range resConfList.ResourceList {
 				templateArgs := fmt.Sprintf(
@@ -126,20 +142,8 @@ var _ = Describe("[Area:Networking] SRIOV Network Device Plugin", func() {
 				out, err := oc.AsAdmin().Run("get").Args("node", n.NodeName).
 					Template(templateArgs).Output()
 				Expect(err).NotTo(HaveOccurred())
-				Expect(out).To(Equal(fmt.Sprintf("%s", n.ResourceNum)))
+				Expect(out).To(Equal(fmt.Sprintf("'%s'", n.ResourceNum)))
 				By(fmt.Sprintf("Node %s allocatable output: %s", n.NodeName, out))
-			}
-
-			if len(resConfList.ResourceList) > 0 {
-				By("Deleting SRIOV device plugin daemonset")
-				err = oc.AsAdmin().Run("delete").
-					Args("-f", DevicePluginDaemonFixture, "-n", "kube-system").Execute()
-				Expect(err).NotTo(HaveOccurred())
-
-				By("Deleting SRIOV device plugin config map")
-				err = oc.AsAdmin().Run("delete").
-					Args("-f", DevicePluginConfigFixture, "-n", "kube-system").Execute()
-				Expect(err).NotTo(HaveOccurred())
 			}
 		})
 	})

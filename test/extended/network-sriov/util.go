@@ -54,8 +54,8 @@ type NICMatrix struct {
 func InitNICMatrix() *NICMatrix {
 	return &NICMatrix{
 		NICs: []Matrix{
-			{VendorID: "0x8086", DeviceID: "0x158b", ResourceName: "intel_XXV710"},
-			//{VendorID: "0x15b3", DeviceID: "0x1015", ResourceName: "mlx_ConnectX4_Lx"},
+			//{VendorID: "0x8086", DeviceID: "0x158b", ResourceName: "intel_XXV710"},
+			{VendorID: "0x15b3", DeviceID: "0x1015", ResourceName: "mlx_ConnectX4_Lx"},
 			{VendorID: "0x15b3", DeviceID: "0x1017", ResourceName: "mlx_ConnectX5"},
 		},
 	}
