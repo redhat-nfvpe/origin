@@ -212,6 +212,14 @@ var _ = Describe("[Area:Networking] SRIOV Network Device Plugin", func() {
 					return true, nil
 				})
 				Expect(err).NotTo(HaveOccurred())
+
+				out, err := oc.AsAdmin().Run("exec").
+					Args("-p", fmt.Sprintf("testpod-%s", n.ResourceName),
+					"--", "/bin/bash", "-c", "ip link show dev net1").Output()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(out).NotTo(ContainSubstring(fmt.Sprintf("does not exist")))
+				Expect(out).To(ContainSubstring(fmt.Sprintf("mtu")))
+				By(fmt.Sprintf("Pod net1 output: %s", out))
 			}
 
 			defer func() {
