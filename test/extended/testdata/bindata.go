@@ -209,6 +209,7 @@
 // test/extended/testdata/service-serving-cert/nginx-serving-cert.conf
 // test/extended/testdata/signer-buildconfig.yaml
 // test/extended/testdata/sriovnetwork/Dockerfile
+// test/extended/testdata/sriovnetwork/cni-daemon.yaml
 // test/extended/testdata/sriovnetwork/config-map.yaml
 // test/extended/testdata/sriovnetwork/crd-intelxxv710.yaml
 // test/extended/testdata/sriovnetwork/crd-mlx4lx.yaml
@@ -12179,6 +12180,68 @@ func testExtendedTestdataSriovnetworkDockerfile() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "test/extended/testdata/sriovnetwork/Dockerfile", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _testExtendedTestdataSriovnetworkCniDaemonYaml = []byte(`---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sriov-cni
+
+---
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: sriov-cni
+  annotations:
+    kubernetes.io/description: |
+      This daemonset copies the SR-IOV CNI plugin on to each node.
+spec:
+  selector:
+    matchLabels:
+      app: sriov-cni
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: sriov-cni
+        component: network
+        type: infra
+        openshift.io/component: network
+    spec:
+      nodeSelector:
+        beta.kubernetes.io/os: linux
+      tolerations:
+      - operator: Exists
+      serviceAccountName: sriov-cni
+      containers:
+      - name: sriov-cni
+        image: nfvpe/sriov-cni
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: cnibin
+          mountPath: /host/opt/cni/bin
+      volumes:
+        - name: cnibin
+          hostPath:
+            path: /var/lib/cni/bin
+`)
+
+func testExtendedTestdataSriovnetworkCniDaemonYamlBytes() ([]byte, error) {
+	return _testExtendedTestdataSriovnetworkCniDaemonYaml, nil
+}
+
+func testExtendedTestdataSriovnetworkCniDaemonYaml() (*asset, error) {
+	bytes, err := testExtendedTestdataSriovnetworkCniDaemonYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "test/extended/testdata/sriovnetwork/cni-daemon.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -33432,6 +33495,7 @@ var _bindata = map[string]func() (*asset, error){
 	"test/extended/testdata/service-serving-cert/nginx-serving-cert.conf": testExtendedTestdataServiceServingCertNginxServingCertConf,
 	"test/extended/testdata/signer-buildconfig.yaml": testExtendedTestdataSignerBuildconfigYaml,
 	"test/extended/testdata/sriovnetwork/Dockerfile": testExtendedTestdataSriovnetworkDockerfile,
+	"test/extended/testdata/sriovnetwork/cni-daemon.yaml": testExtendedTestdataSriovnetworkCniDaemonYaml,
 	"test/extended/testdata/sriovnetwork/config-map.yaml": testExtendedTestdataSriovnetworkConfigMapYaml,
 	"test/extended/testdata/sriovnetwork/crd-intelxxv710.yaml": testExtendedTestdataSriovnetworkCrdIntelxxv710Yaml,
 	"test/extended/testdata/sriovnetwork/crd-mlx4lx.yaml": testExtendedTestdataSriovnetworkCrdMlx4lxYaml,
@@ -33952,6 +34016,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"signer-buildconfig.yaml": &bintree{testExtendedTestdataSignerBuildconfigYaml, map[string]*bintree{}},
 				"sriovnetwork": &bintree{nil, map[string]*bintree{
 					"Dockerfile": &bintree{testExtendedTestdataSriovnetworkDockerfile, map[string]*bintree{}},
+					"cni-daemon.yaml": &bintree{testExtendedTestdataSriovnetworkCniDaemonYaml, map[string]*bintree{}},
 					"config-map.yaml": &bintree{testExtendedTestdataSriovnetworkConfigMapYaml, map[string]*bintree{}},
 					"crd-intelxxv710.yaml": &bintree{testExtendedTestdataSriovnetworkCrdIntelxxv710Yaml, map[string]*bintree{}},
 					"crd-mlx4lx.yaml": &bintree{testExtendedTestdataSriovnetworkCrdMlx4lxYaml, map[string]*bintree{}},

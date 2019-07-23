@@ -113,9 +113,24 @@ var _ = Describe("[Area:Networking] SRIOV Network Device Plugin", func() {
 					Args("-f", DevicePluginDaemonFixture, "-n", "kube-system").Execute()
 				Expect(err).NotTo(HaveOccurred())
 
-				By("Waiting for SRIOV daemonsets become ready")
+				By("Waiting for SRIOV Device Plugin daemonsets become ready")
 				err = wait.PollImmediate(e2e.Poll, 3*time.Minute, func() (bool, error) {
 					err = CheckSRIOVDaemonStatus(f1, "kube-system", sriovDPPodName)
+					if err != nil {
+						return false, nil
+					}
+					return true, nil
+				})
+				Expect(err).NotTo(HaveOccurred())
+
+				By("Creating SRIOV CNI plugin daemonset")
+				err = oc.AsAdmin().Run("create").
+					Args("-f", CNIDaemonFixture, "-n", "kube-system").Execute()
+				Expect(err).NotTo(HaveOccurred())
+
+				By("Waiting for SRIOV CNI daemonsets become ready")
+				err = wait.PollImmediate(e2e.Poll, 3*time.Minute, func() (bool, error) {
+					err = CheckSRIOVDaemonStatus(f1, "kube-system", sriovCNIPodName)
 					if err != nil {
 						return false, nil
 					}
@@ -144,6 +159,12 @@ var _ = Describe("[Area:Networking] SRIOV Network Device Plugin", func() {
                                         By("Deleting SRIOV device plugin config map")
                                         err = oc.AsAdmin().Run("delete").
                                                 Args("-f", DevicePluginConfigFixture, "-n", "kube-system").
+						Execute()
+                                        Expect(err).NotTo(HaveOccurred())
+
+                                        By("Deleting SRIOV CNI daemonset")
+                                        err = oc.AsAdmin().Run("delete").
+                                                Args("-f", CNIDaemonFixture, "-n", "kube-system").
 						Execute()
                                         Expect(err).NotTo(HaveOccurred())
                                 }

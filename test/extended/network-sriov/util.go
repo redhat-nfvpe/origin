@@ -19,7 +19,9 @@ const (
 	debugPodName     = "sriov-debug-pod"
 	debugPodSpec     = "debug-pod.yaml"
 	sriovDPPodName   = "sriov-device-plugin"
+	sriovCNIPodName  = "sriov-cni"
 	sriovDPSpec      = "dp-daemon.yaml"
+	sriovCNISpec     = "cni-daemon.yaml"
 	sriovDPConfigMap = "config-map.yaml"
 	sriovNumVFs      = "4"
 )
@@ -27,6 +29,7 @@ const (
 var (
 	TestDataFixture = exutil.FixturePath("testdata", "sriovnetwork")
 	DebugPodFixture = exutil.FixturePath("testdata", "sriovnetwork", debugPodSpec)
+	CNIDaemonFixture = exutil.FixturePath("testdata", "sriovnetwork", sriovCNISpec)
 	DevicePluginDaemonFixture = exutil.FixturePath("testdata", "sriovnetwork", sriovDPSpec)
 	DevicePluginConfigFixture = exutil.FixturePath("testdata", "sriovnetwork", sriovDPConfigMap)
 )
