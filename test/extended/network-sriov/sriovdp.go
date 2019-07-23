@@ -50,27 +50,32 @@ var _ = Describe("[Area:Networking] SRIOV Network Device Plugin", func() {
 
 		It("should report correct SRIOV VF numbers", func() {
 
-			By("Creating SRIOV debug pod")
-			err := CreateDebugPod(oc)
-			Expect(err).NotTo(HaveOccurred())
-
-			By("Debug list host interfaces")
-			err = DebugListHostInt(oc)
-			Expect(err).NotTo(HaveOccurred())
-
 			By("Get all worker nodes")
 			options := metav1.ListOptions{LabelSelector: "node-role.kubernetes.io/worker="}
 			workerNodes, _ := f1.ClientSet.CoreV1().Nodes().List(options)
-
-			pod, err := oc.AdminKubeClient().CoreV1().Pods(oc.Namespace()).
-				Get(debugPodName, metav1.GetOptions{})
-			Expect(err).NotTo(HaveOccurred())
 
 			resConfList := ResourceConfList{}
 			nicMatrix := InitNICMatrix()
 
 			By("Provision SR-IOV on worker nodes")
 			for _, n := range workerNodes.Items {
+
+				err := oc.AsAdmin().Run("label").
+					Args("node", n.GetName(), "node.sriovStatus=provisioning").Execute()
+				Expect(err).NotTo(HaveOccurred())
+
+				By(fmt.Sprintf("Creating SRIOV debug pod on Node %s", n.GetName()))
+				err = CreateDebugPod(oc)
+				Expect(err).NotTo(HaveOccurred())
+
+				By(fmt.Sprintf("Debug list host interfaces on Node %s", n.GetName()))
+				err = DebugListHostInt(oc)
+				Expect(err).NotTo(HaveOccurred())
+
+				pod, err := oc.AdminKubeClient().CoreV1().Pods(oc.Namespace()).
+					Get(debugPodName, metav1.GetOptions{})
+				Expect(err).NotTo(HaveOccurred())
+
 				for _, dev := range nicMatrix.NICs {
 					out, err := oc.AsAdmin().Run("exec").Args(pod.Name,
 						"-c", pod.Spec.Containers[0].Name,
@@ -93,18 +98,26 @@ var _ = Describe("[Area:Networking] SRIOV Network Device Plugin", func() {
 						e2e.Logf("Skipping node %s.", n.GetName())
 					}
 				}
+
+				By(fmt.Sprintf("Deleting SRIOV debug pod on Node %s", n.GetName()))
+				err = DeleteDebugPod(oc)
+				Expect(err).NotTo(HaveOccurred())
+
+				err = oc.AsAdmin().Run("label").
+					Args("node", n.GetName(), "node.sriovStatus-").Execute()
+				Expect(err).NotTo(HaveOccurred())
 			}
 
 			if len(resConfList.ResourceList) > 0 {
 				for _, dev := range nicMatrix.NICs {
 					By("Creating SR-IOV CRDs")
-					err = oc.AsAdmin().Run("create").
+					err := oc.AsAdmin().Run("create").
 						Args("-f", fmt.Sprintf("%s/crd-%s.yaml",
 						TestDataFixture, dev.ResourceName)).Execute()
 					Expect(err).NotTo(HaveOccurred())
 				}
 				By("Creating SRIOV device plugin config map")
-				err = oc.AsAdmin().Run("create").
+				err := oc.AsAdmin().Run("create").
 					Args("-f", DevicePluginConfigFixture, "-n", "kube-system").Execute()
 				Expect(err).NotTo(HaveOccurred())
 
@@ -145,13 +158,13 @@ var _ = Describe("[Area:Networking] SRIOV Network Device Plugin", func() {
                                 if len(resConfList.ResourceList) > 0 {
 					for _, dev := range nicMatrix.NICs {
 						By("Deleting SR-IOV CRDs")
-						err = oc.AsAdmin().Run("delete").
+						err := oc.AsAdmin().Run("delete").
 							Args("-f", fmt.Sprintf("%s/crd-%s.yaml",
 							TestDataFixture, dev.ResourceName)).Execute()
 						Expect(err).NotTo(HaveOccurred())
 					}
                                         By("Deleting SRIOV device plugin daemonset")
-                                        err = oc.AsAdmin().Run("delete").
+                                        err := oc.AsAdmin().Run("delete").
                                                 Args("-f", DevicePluginDaemonFixture, "-n", "kube-system").
 						Execute()
                                         Expect(err).NotTo(HaveOccurred())
@@ -185,7 +198,7 @@ var _ = Describe("[Area:Networking] SRIOV Network Device Plugin", func() {
 
 			for _, n := range resConfList.ResourceList {
 				By("Creating SRIOV Test Pod")
-				err = oc.AsAdmin().Run("create").
+				err := oc.AsAdmin().Run("create").
 					Args("-f", fmt.Sprintf("%s/pod-%s.yaml",
 					TestDataFixture, n.ResourceName)).Execute()
 				Expect(err).NotTo(HaveOccurred())

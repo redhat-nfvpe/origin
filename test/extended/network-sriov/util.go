@@ -129,6 +129,15 @@ func CreateDebugPod(oc *exutil.CLI) error {
 	return err
 }
 
+func DeleteDebugPod(oc *exutil.CLI) error {
+	By("Deleting Debug pod")
+	err := oc.AsAdmin().Run("delete").Args("-f", DebugPodFixture).Execute()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func CheckPodStatus(oc *exutil.CLI, name string) error {
 	pod, err := oc.AdminKubeClient().CoreV1().Pods(oc.Namespace()).
 		Get(name, metav1.GetOptions{})
