@@ -151,8 +151,9 @@ var _ = Describe("[Area:Networking] SRIOV Network Device Plugin", func() {
 					Expect(err).NotTo(HaveOccurred())
 				}
 				By("Creating SRIOV device plugin config map")
-				err := oc.AsAdmin().Run("create").
-					Args("-f", DevicePluginConfigFixture, "-n", "kube-system").Execute()
+				err := oc.AsAdmin().Run("create").Args("-f",
+					fmt.Sprintf("%s/%s", DPDKTestDataFixture, sriovDPConfigMap),
+					"-n", "kube-system").Execute()
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Creating SRIOV device plugin daemonset")
@@ -204,9 +205,9 @@ var _ = Describe("[Area:Networking] SRIOV Network Device Plugin", func() {
                                         Expect(err).NotTo(HaveOccurred())
 
                                         By("Deleting SRIOV device plugin config map")
-                                        err = oc.AsAdmin().Run("delete").
-                                                Args("-f", DevicePluginConfigFixture, "-n", "kube-system").
-						Execute()
+                                        err = oc.AsAdmin().Run("delete").Args("-f",
+						fmt.Sprintf("%s/%s", DPDKTestDataFixture, sriovDPConfigMap)
+						"-n", "kube-system").Execute()
                                         Expect(err).NotTo(HaveOccurred())
 
                                         By("Deleting SRIOV CNI daemonset")
@@ -217,7 +218,7 @@ var _ = Describe("[Area:Networking] SRIOV Network Device Plugin", func() {
                                 }
                         }()
 
-			time.Sleep(1 * time.Minute)
+			time.Sleep(20 * time.Second)
 			for _, n := range resConfList.ResourceList {
 				var templateArgs string
 				if n.ResourceName == "intelxxv710" {

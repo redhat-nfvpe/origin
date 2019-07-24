@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sriovdp-config
+data:
+  config.json: |
+    {
+        "resourceList": [{
+                "resourceName": "intelxxv710dpdk",
+                "selectors": {
+                    "vendors": ["8086"],
+                    "devices": ["154c"],
+                    "drivers": ["vfio-pci"]
+                }
+            },
+            {
+                "resourceName": "mlx5",
+                "selectors": {
+                    "vendors": ["15b3"],
+                    "devices": ["1018"]
+                }
+            },
+            {
+                "resourceName": "mlx4lx",
+                "selectors": {
+                    "vendors": ["15b3"],
+                    "devices": ["1016"]
+                }
+            }
+        ]
+    }
