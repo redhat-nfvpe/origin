@@ -209,6 +209,7 @@
 // test/extended/testdata/service-serving-cert/nginx-serving-cert.conf
 // test/extended/testdata/signer-buildconfig.yaml
 // test/extended/testdata/sriovnetwork/Dockerfile
+// test/extended/testdata/sriovnetwork/bind_dpdk.sh
 // test/extended/testdata/sriovnetwork/cni-daemon.yaml
 // test/extended/testdata/sriovnetwork/config-map.yaml
 // test/extended/testdata/sriovnetwork/crd-intelxxv710.yaml
@@ -216,6 +217,12 @@
 // test/extended/testdata/sriovnetwork/crd-mlx5.yaml
 // test/extended/testdata/sriovnetwork/debug-pod.yaml
 // test/extended/testdata/sriovnetwork/dp-daemon.yaml
+// test/extended/testdata/sriovnetwork/dpdk/crd-intelxxv710-dpdk.yaml
+// test/extended/testdata/sriovnetwork/dpdk/crd-mlx4lx-dpdk.yaml
+// test/extended/testdata/sriovnetwork/dpdk/crd-mlx5-dpdk.yaml
+// test/extended/testdata/sriovnetwork/dpdk/pod-intelxxv710-dpdk.yaml
+// test/extended/testdata/sriovnetwork/dpdk/pod-mlx4lx-dpdk.yaml
+// test/extended/testdata/sriovnetwork/dpdk/pod-mlx5-dpdk.yaml
 // test/extended/testdata/sriovnetwork/pod-intelxxv710.yaml
 // test/extended/testdata/sriovnetwork/pod-mlx4lx.yaml
 // test/extended/testdata/sriovnetwork/pod-mlx5.yaml
@@ -12167,6 +12174,7 @@ func testExtendedTestdataSignerBuildconfigYaml() (*asset, error) {
 var _testExtendedTestdataSriovnetworkDockerfile = []byte(`FROM centos/tools
 
 ADD provision_sriov.sh /
+ADD bind_dpdk.sh /
 `)
 
 func testExtendedTestdataSriovnetworkDockerfileBytes() ([]byte, error) {
@@ -12180,6 +12188,180 @@ func testExtendedTestdataSriovnetworkDockerfile() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "test/extended/testdata/sriovnetwork/Dockerfile", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _testExtendedTestdataSriovnetworkBind_dpdkSh = []byte(`#!/bin/bash
+
+# Iterate over /sys/class/net and Bind VFs to vfio-pci driver
+
+set -x
+
+progname=$0
+Bind=
+unBind=
+failCount=0
+
+function usage () {
+   cat <<EOF
+Usage: $progname [-b]
+EOF
+   exit 0
+}
+
+function BindVFToDPDK () {
+	pci=$1
+	ret=0
+	chroot /host /bin/bash -c "echo $pci > /sys/bus/pci/drivers/iavf/unbind"
+	if [ ! $? -eq 0 ]; then
+		let ret++
+	fi
+	chroot /host /bin/bash -c "echo vfio-pci > /sys/bus/pci/devices/$pci/driver_override"
+	if [ ! $? -eq 0 ]; then
+		let ret++
+	fi
+	chroot /host /bin/bash -c "echo $pci > /sys/bus/pci/drivers/vfio-pci/bind"
+	if [ ! $? -eq 0 ]; then
+		let ret++
+	fi
+	chroot /host /bin/bash -c "echo  > /sys/bus/pci/devices/$pci/driver_override"
+	if [ ! $? -eq 0 ]; then
+		let ret++
+	fi
+	echo $ret
+}
+
+function unBindVF () {
+	pci=$1
+	ret=0
+	chroot /host /bin/bash -c "echo $pci > /sys/bus/pci/drivers/vfio-pci/unbind"
+	if [ ! $? -eq 0 ]; then
+		let ret++
+	fi
+	chroot /host /bin/bash -c "echo iavf > /sys/bus/pci/devices/$pci/driver_override"
+	if [ ! $? -eq 0 ]; then
+		let ret++
+	fi
+	chroot /host /bin/bash -c "echo $pci > /sys/bus/pci/drivers/iavf/bind"
+	if [ ! $? -eq 0 ]; then
+		let ret++
+	fi
+	chroot /host /bin/bash -c "echo  > /sys/bus/pci/devices/$pci/driver_override"
+	if [ ! $? -eq 0 ]; then
+		let ret++
+	fi
+	echo $ret
+}
+
+while getopts buh FLAG; do
+   case $FLAG in
+
+   b) Bind="yes" ;;
+   u) unBind="yes" ;;
+   h) usage ;;
+   *) usage ;;
+   esac
+done
+
+chroot /host /bin/bash -c "modprobe vfio-pci"
+
+if [ "$Bind" == "yes" ]; then
+	for i in `+"`"+`ls /sys/class/net`+"`"+`
+	do
+		# Skip non physical devices
+		if [ ! -e /sys/class/net/$i/device ]; then
+			continue
+		fi
+	
+		# Skip interface with operstate being 'down'
+		if [ $(cat /sys/class/net/$i/operstate) == 'down' ]; then
+			continue
+		fi
+	
+		# Skip interface with ip configured
+		if [ $(ip route list | grep -q $i) ]; then
+			continue
+		fi
+	
+		# Skip interface doesn't have vendor id
+		if [ ! -e /sys/class/net/$i/device/vendor ]; then
+			continue
+		fi
+	
+		# Skip interface not from vendor id
+		if [ "$(cat /sys/class/net/$i/device/vendor)" != "0x8086" ]; then
+			continue
+		fi
+	
+		pciAddr=`+"`"+`ls -al /sys/class/net/$i/device | awk -F/ '{ print $NF }'`+"`"+`
+	
+		# Skip interface not vf
+		if [ ! -e /sys/bus/pci/devices/$pciAddr/physfn ]; then
+			continue
+		fi
+	
+		# Bind VF num to DPDK
+		res=$(BindVFToDPDK $pciAddr)
+		if [ $res != 0 ]; then
+			let failCount++
+		fi
+	done
+
+	if [ $failCount == 0 ]; then
+		echo "successfully bind vfs to vfio-pci driver"
+		exit
+	else
+		echo "failed to bind vfs to vfio-pci driver, exiting"
+		exit 1
+	fi
+fi
+
+if [ "$unBind" == "yes" ]; then
+
+	for i in `+"`"+`ls /sys/bus/pci/devices`+"`"+`
+	do
+		if [ ! -e /sys/bus/pci/devices/$i/driver ]; then
+			continue
+		fi
+
+		if [ ! -e /sys/bus/pci/devices/$i/class ]; then
+			continue
+		fi
+
+		if [ $(cat /sys/bus/pci/devices/$i/class) != "0x020000" ]; then
+			continue
+		fi
+
+		if [ $(ls -al /sys/bus/pci/devices/$i/driver | awk -F/ '{ print $NF }') == "vfio-pci" ]; then
+			res=$(unBindVF $i)
+			if [ $res != 0 ]; then
+				let failCount++
+			fi
+		fi
+	done
+
+	if [ $failCount == 0 ]; then
+		echo "successfully unbind vfs from vfio-pci driver"
+		exit
+	else
+		echo "failed to unbind vfs from vfio-pci driver, exiting"
+		exit 1
+	fi
+fi
+`)
+
+func testExtendedTestdataSriovnetworkBind_dpdkShBytes() ([]byte, error) {
+	return _testExtendedTestdataSriovnetworkBind_dpdkSh, nil
+}
+
+func testExtendedTestdataSriovnetworkBind_dpdkSh() (*asset, error) {
+	bytes, err := testExtendedTestdataSriovnetworkBind_dpdkShBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "test/extended/testdata/sriovnetwork/bind_dpdk.sh", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -12538,6 +12720,228 @@ func testExtendedTestdataSriovnetworkDpDaemonYaml() (*asset, error) {
 	return a, nil
 }
 
+var _testExtendedTestdataSriovnetworkDpdkCrdIntelxxv710DpdkYaml = []byte(`apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: sriov-net-intel-xxv710-dpdk
+  annotations:
+    k8s.v1.cni.cncf.io/resourceName: openshift.com/intelxxv710dpdk
+spec:
+  config: '{
+  "type": "sriov",
+  "name": "sriov-network"
+}'
+`)
+
+func testExtendedTestdataSriovnetworkDpdkCrdIntelxxv710DpdkYamlBytes() ([]byte, error) {
+	return _testExtendedTestdataSriovnetworkDpdkCrdIntelxxv710DpdkYaml, nil
+}
+
+func testExtendedTestdataSriovnetworkDpdkCrdIntelxxv710DpdkYaml() (*asset, error) {
+	bytes, err := testExtendedTestdataSriovnetworkDpdkCrdIntelxxv710DpdkYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "test/extended/testdata/sriovnetwork/dpdk/crd-intelxxv710-dpdk.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _testExtendedTestdataSriovnetworkDpdkCrdMlx4lxDpdkYaml = []byte(`apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: sriov-net-connectx4-lx-dpdk
+  annotations:
+    k8s.v1.cni.cncf.io/resourceName: openshift.com/mlx4lx
+spec:
+  config: '{
+  "type": "sriov",
+  "name": "sriov-network",
+  "ipam": {
+    "type": "host-local",
+    "subnet": "10.56.217.0/24",
+    "routes": [{
+      "dst": "0.0.0.0/0"
+    }],
+    "gateway": "10.56.217.1"
+  }
+}'
+`)
+
+func testExtendedTestdataSriovnetworkDpdkCrdMlx4lxDpdkYamlBytes() ([]byte, error) {
+	return _testExtendedTestdataSriovnetworkDpdkCrdMlx4lxDpdkYaml, nil
+}
+
+func testExtendedTestdataSriovnetworkDpdkCrdMlx4lxDpdkYaml() (*asset, error) {
+	bytes, err := testExtendedTestdataSriovnetworkDpdkCrdMlx4lxDpdkYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "test/extended/testdata/sriovnetwork/dpdk/crd-mlx4lx-dpdk.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _testExtendedTestdataSriovnetworkDpdkCrdMlx5DpdkYaml = []byte(`apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: sriov-net-mlx-connectx5-dpdk
+  annotations:
+    k8s.v1.cni.cncf.io/resourceName: openshift.com/mlx5
+spec:
+  config: '{
+  "type": "sriov",
+  "name": "sriov-network",
+  "ipam": {
+    "type": "host-local",
+    "subnet": "10.56.217.0/24",
+    "routes": [{
+      "dst": "0.0.0.0/0"
+    }],
+    "gateway": "10.56.217.1"
+  }
+}'
+`)
+
+func testExtendedTestdataSriovnetworkDpdkCrdMlx5DpdkYamlBytes() ([]byte, error) {
+	return _testExtendedTestdataSriovnetworkDpdkCrdMlx5DpdkYaml, nil
+}
+
+func testExtendedTestdataSriovnetworkDpdkCrdMlx5DpdkYaml() (*asset, error) {
+	bytes, err := testExtendedTestdataSriovnetworkDpdkCrdMlx5DpdkYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "test/extended/testdata/sriovnetwork/dpdk/crd-mlx5-dpdk.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _testExtendedTestdataSriovnetworkDpdkPodIntelxxv710DpdkYaml = []byte(`apiVersion: v1
+kind: Pod
+metadata:
+  name: testpod-intelxxv710-dpdk
+  annotations:
+    k8s.v1.cni.cncf.io/networks: sriov-net-intel-xxv710-dpdk
+spec:
+  containers:
+  - name: appcntr
+    image: zenghui/centos-dpdk
+    imagePullPolicy: IfNotPresent
+    securityContext:
+     capabilities:
+       add: ["IPC_LOCK"]
+    command: [ "/bin/bash", "-c", "--" ]
+    args: [ "while true; do sleep 300000; done;" ]
+    resources:
+      requests:
+        openshift.com/intelxxv710dpdk: '2' 
+        memory: 100Mi
+        hugepages-1Gi: 6Gi
+        cpu: '4'
+      limits:
+        openshift.com/intelxxv710dpdk: '2' 
+        hugepages-1Gi: 6Gi
+        cpu: '4'
+        memory: 100Mi
+    volumeMounts:
+    - mountPath: /mnt/huge
+      name: hugepage
+      readOnly: False
+  volumes:
+  - name: hugepage
+    emptyDir:
+      medium: HugePages
+`)
+
+func testExtendedTestdataSriovnetworkDpdkPodIntelxxv710DpdkYamlBytes() ([]byte, error) {
+	return _testExtendedTestdataSriovnetworkDpdkPodIntelxxv710DpdkYaml, nil
+}
+
+func testExtendedTestdataSriovnetworkDpdkPodIntelxxv710DpdkYaml() (*asset, error) {
+	bytes, err := testExtendedTestdataSriovnetworkDpdkPodIntelxxv710DpdkYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "test/extended/testdata/sriovnetwork/dpdk/pod-intelxxv710-dpdk.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _testExtendedTestdataSriovnetworkDpdkPodMlx4lxDpdkYaml = []byte(`apiVersion: v1
+kind: Pod
+metadata:
+  name: testpod-mlx4lx-dpdk
+  annotations:
+    k8s.v1.cni.cncf.io/networks: sriov-net-connectx4-lx-dpdk
+spec:
+  containers:
+  - name: appcntr
+    image: centos/tools 
+    imagePullPolicy: IfNotPresent
+    command: [ "/bin/bash", "-c", "--" ]
+    args: [ "while true; do sleep 300000; done;" ]
+    resources:
+      requests:
+        openshift.com/mlx4lx: '1' 
+      limits:
+        openshift.com/mlx4lx: '1'
+`)
+
+func testExtendedTestdataSriovnetworkDpdkPodMlx4lxDpdkYamlBytes() ([]byte, error) {
+	return _testExtendedTestdataSriovnetworkDpdkPodMlx4lxDpdkYaml, nil
+}
+
+func testExtendedTestdataSriovnetworkDpdkPodMlx4lxDpdkYaml() (*asset, error) {
+	bytes, err := testExtendedTestdataSriovnetworkDpdkPodMlx4lxDpdkYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "test/extended/testdata/sriovnetwork/dpdk/pod-mlx4lx-dpdk.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _testExtendedTestdataSriovnetworkDpdkPodMlx5DpdkYaml = []byte(`apiVersion: v1
+kind: Pod
+metadata:
+  name: testpod-mlx5-dpdk
+  annotations:
+    k8s.v1.cni.cncf.io/networks: sriov-net-mlx-connectx5-dpdk
+spec:
+  containers:
+  - name: appcntr
+    image: centos/tools 
+    imagePullPolicy: IfNotPresent
+    command: [ "/bin/bash", "-c", "--" ]
+    args: [ "while true; do sleep 300000; done;" ]
+    resources:
+      requests:
+        openshift.com/mlx5: '1' 
+      limits:
+        openshift.com/mlx5: '1'
+`)
+
+func testExtendedTestdataSriovnetworkDpdkPodMlx5DpdkYamlBytes() ([]byte, error) {
+	return _testExtendedTestdataSriovnetworkDpdkPodMlx5DpdkYaml, nil
+}
+
+func testExtendedTestdataSriovnetworkDpdkPodMlx5DpdkYaml() (*asset, error) {
+	bytes, err := testExtendedTestdataSriovnetworkDpdkPodMlx5DpdkYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "test/extended/testdata/sriovnetwork/dpdk/pod-mlx5-dpdk.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
 var _testExtendedTestdataSriovnetworkPodIntelxxv710Yaml = []byte(`apiVersion: v1
 kind: Pod
 metadata:
@@ -12710,7 +13114,7 @@ do
 	fi
 
 	# Skip interface with ip configured
-	if [ $(ip route list | grep -q $i) ]; then
+	if ip route list | grep -q $i; then
 		continue
 	fi
 
@@ -12772,8 +13176,10 @@ set -x
 
 progname=$0
 NUMVF=2
-VENDOR=""
-INT=""
+VENDORID=
+DEVICEID=
+DEVICEMODE=
+INT=
 
 function usage () {
    cat <<EOF
@@ -12782,78 +13188,117 @@ EOF
    exit 0
 }
 
-while getopts c:v:i: FLAG; do
+function BindVFToDPDK () {
+	pci=$1
+	echo "Configuring VF to DPDK mode"
+	chroot /host /bin/bash -c "echo $pci > /sys/bus/pci/drivers/vfio-pci/unbind"
+	chroot /host /bin/bash -c "echo iavf > /sys/bus/pci/devices/$pci/driver_override"
+	chroot /host /bin/bash -c "echo $pci > /sys/bus/pci/drivers/iavf/bind"
+	chroot /host /bin/bash -c "echo  > /sys/bus/pci/devices/$pci/driver_override"
+}
+
+function unBindVF () {
+	pci=$1
+	echo "Configuring VF to Kernel mode"
+	chroot /host /bin/bash -c "echo $pci > /sys/bus/pci/drivers/iavf/unbind"
+	chroot /host /bin/bash -c "echo vfio-pci > /sys/bus/pci/devices/$pci/driver_override"
+	chroot /host /bin/bash -c "echo $pci > /sys/bus/pci/drivers/vfio-pci/bind"
+	chroot /host /bin/bash -c "echo  > /sys/bus/pci/devices/$pci/driver_override"
+}
+
+while getopts c:v:i:d:h FLAG; do
    case $FLAG in
 
-   c)  echo "Creating $OPTARG VF(s)" 
+   c)  echo "Creating $OPTARG VF(s)"
        NUMVF=$OPTARG
        ;;
-   v)  echo "Creating VF on $OPTARG card" 
-       VENDOR=$OPTARG
+   v)  echo "Vendor ID specified $OPTARG"
+       VENDORID=$OPTARG
        ;;
-   i)  echo "Creating VF on $OPTARG interface" 
+   d)  echo "Device ID specified $OPTARG"
+       DEVICEID=$OPTARG
+       ;;
+   i)  echo "Creating VF on $OPTARG interface"
        INT=$OPTARG
        ;;
-   h)  usage ;;
-   \?) usage ;;
+   m)  echo "Device Mode specified $OPTARG"
+       DEVICEMODE=$OPTARG
+       ;;
+   h) usage ;;
+   *) usage ;;
    esac
 done
 
-function isSriovCapable() {
-	dev=$1
-	if [ -e /sys/class/net/$dev/device/sriov_numvfs ]; then
-		return true
+if [ -n "$INT" ]; then
+	if [ -e /sys/class/net/$INT/device/sriov_numvfs ]; then
+		if [ $(echo $NUMVF > /sys/class/net/$INT/device/sriov_numvfs) ]; then
+			exit
+		fi
 	fi
-	return false
-}
+	echo "failed to configure $NUMVF vfs on $INT interface, exiting"
+	exit 1
+fi
 
-function isLinkUp() {
-	dev=$1
-	if [ $(cat /sys/class/net/$dev/operstate) == 'up' ]; then
-		return true
+for i in `+"`"+`ls /sys/class/net`+"`"+`
+do
+	# Skip interface without SR-IOV capability
+	if [ ! -e /sys/class/net/$i/device/sriov_numvfs ]; then
+		continue
 	fi
-	return false
-}
 
-function hasIP() {
-	dev=$1
-	if [ $(ip route list | grep $dev ) ]; then
-		return true
+	# Skip interface with operstate being 'down'
+	if [ $(cat /sys/class/net/$i/operstate) == 'down' ]; then
+		continue
 	fi
-	return false
-}
 
-function configVF() {
-	dev=$1
-	num=$2
-	if [ $(echo $num > /sys/class/net/$dev/device/sriov_numvfs) ]; then
-		return true
+	# Skip interface with ip configured
+	if [ $(ip route list | grep -q $i) ]; then
+		continue
 	fi
-	return false
-}
 
-#for i in `+"`"+`ls /sys/class/net`+"`"+`
-#do
-#
-#	# Skip interface without SR-IOV capability
-#	if [ ! -e /sys/class/net/$i/device/sriov_numvfs ]; then
-#		continue
-#	fi
-#
-#	# Skip interface with operstate being 'down'
-#	if [ $(cat /sys/class/net/$i/operstate) == 'down' ]; then
-#		continue
-#	fi
-#
-#	# Skip interface with ip configured
-#	if [ $(ip route list | grep $i) ]; then
-#		continue
-#	fi
-#
-#	if [ ! $(echo $NUMVF > /sys/class/net/$i/device/sriov_numvfs) ]; then
-#		exit 1
-#	fi
-#done
+	# Skip interface not from vendor id
+	if [ "$(cat /sys/class/net/$i/device/vendor)" != "$VENDORID" ]; then
+		continue
+	fi
+
+	# Skip interface not with device id
+	if [ "$(cat /sys/class/net/$i/device/device)" != "$DEVICEID" ]; then
+		continue
+	fi
+
+	# Reset VF num
+        chroot /host /bin/bash -c "echo 0 > /sys/class/net/$i/device/sriov_numvfs"
+        if [ $? == 0 ]; then
+                echo "successfully configured 0 vfs on $i interface"
+        else
+                echo "failed to configure 0 vfs on $i interface, exiting"
+                exit 1
+        fi
+
+        chroot /host /bin/bash -c "echo $NUMVF > /sys/class/net/$i/device/sriov_numvfs"
+        if [ $? == 0 ]; then
+
+		# Bind VF to vfio-pci driver if:
+		# 1) dpdk mode is specified in $DEVICEMODE
+		# 2) vendor is Intel
+
+		if [ "$(cat /sys/class/net/$i/device/vendor)" == "0x8086" ] && [ "dpdk" == "$DEVICEMODE" ]; then
+			BindVFToDPDK
+			if [ $? == 0 ]; then
+				echo "successfully configured $NUMVF DPDK vfs on $i interface"
+				exit
+			else
+				echo "failed to configure $NUMVF DPDK vfs on $i interface, exiting"
+		                exit 1
+			fi
+		fi
+                echo "successfully configured $NUMVF vfs on $i interface"
+		exit
+        else
+                echo "failed to configure $NUMVF vfs on $i interface, exiting"
+                exit 1
+        fi
+done
 `)
 
 func testExtendedTestdataSriovnetworkProvision_sriovShBakBytes() ([]byte, error) {
@@ -33497,6 +33942,7 @@ var _bindata = map[string]func() (*asset, error){
 	"test/extended/testdata/service-serving-cert/nginx-serving-cert.conf": testExtendedTestdataServiceServingCertNginxServingCertConf,
 	"test/extended/testdata/signer-buildconfig.yaml": testExtendedTestdataSignerBuildconfigYaml,
 	"test/extended/testdata/sriovnetwork/Dockerfile": testExtendedTestdataSriovnetworkDockerfile,
+	"test/extended/testdata/sriovnetwork/bind_dpdk.sh": testExtendedTestdataSriovnetworkBind_dpdkSh,
 	"test/extended/testdata/sriovnetwork/cni-daemon.yaml": testExtendedTestdataSriovnetworkCniDaemonYaml,
 	"test/extended/testdata/sriovnetwork/config-map.yaml": testExtendedTestdataSriovnetworkConfigMapYaml,
 	"test/extended/testdata/sriovnetwork/crd-intelxxv710.yaml": testExtendedTestdataSriovnetworkCrdIntelxxv710Yaml,
@@ -33504,6 +33950,12 @@ var _bindata = map[string]func() (*asset, error){
 	"test/extended/testdata/sriovnetwork/crd-mlx5.yaml": testExtendedTestdataSriovnetworkCrdMlx5Yaml,
 	"test/extended/testdata/sriovnetwork/debug-pod.yaml": testExtendedTestdataSriovnetworkDebugPodYaml,
 	"test/extended/testdata/sriovnetwork/dp-daemon.yaml": testExtendedTestdataSriovnetworkDpDaemonYaml,
+	"test/extended/testdata/sriovnetwork/dpdk/crd-intelxxv710-dpdk.yaml": testExtendedTestdataSriovnetworkDpdkCrdIntelxxv710DpdkYaml,
+	"test/extended/testdata/sriovnetwork/dpdk/crd-mlx4lx-dpdk.yaml": testExtendedTestdataSriovnetworkDpdkCrdMlx4lxDpdkYaml,
+	"test/extended/testdata/sriovnetwork/dpdk/crd-mlx5-dpdk.yaml": testExtendedTestdataSriovnetworkDpdkCrdMlx5DpdkYaml,
+	"test/extended/testdata/sriovnetwork/dpdk/pod-intelxxv710-dpdk.yaml": testExtendedTestdataSriovnetworkDpdkPodIntelxxv710DpdkYaml,
+	"test/extended/testdata/sriovnetwork/dpdk/pod-mlx4lx-dpdk.yaml": testExtendedTestdataSriovnetworkDpdkPodMlx4lxDpdkYaml,
+	"test/extended/testdata/sriovnetwork/dpdk/pod-mlx5-dpdk.yaml": testExtendedTestdataSriovnetworkDpdkPodMlx5DpdkYaml,
 	"test/extended/testdata/sriovnetwork/pod-intelxxv710.yaml": testExtendedTestdataSriovnetworkPodIntelxxv710Yaml,
 	"test/extended/testdata/sriovnetwork/pod-mlx4lx.yaml": testExtendedTestdataSriovnetworkPodMlx4lxYaml,
 	"test/extended/testdata/sriovnetwork/pod-mlx5.yaml": testExtendedTestdataSriovnetworkPodMlx5Yaml,
@@ -34018,6 +34470,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 				"signer-buildconfig.yaml": &bintree{testExtendedTestdataSignerBuildconfigYaml, map[string]*bintree{}},
 				"sriovnetwork": &bintree{nil, map[string]*bintree{
 					"Dockerfile": &bintree{testExtendedTestdataSriovnetworkDockerfile, map[string]*bintree{}},
+					"bind_dpdk.sh": &bintree{testExtendedTestdataSriovnetworkBind_dpdkSh, map[string]*bintree{}},
 					"cni-daemon.yaml": &bintree{testExtendedTestdataSriovnetworkCniDaemonYaml, map[string]*bintree{}},
 					"config-map.yaml": &bintree{testExtendedTestdataSriovnetworkConfigMapYaml, map[string]*bintree{}},
 					"crd-intelxxv710.yaml": &bintree{testExtendedTestdataSriovnetworkCrdIntelxxv710Yaml, map[string]*bintree{}},
@@ -34025,6 +34478,14 @@ var _bintree = &bintree{nil, map[string]*bintree{
 					"crd-mlx5.yaml": &bintree{testExtendedTestdataSriovnetworkCrdMlx5Yaml, map[string]*bintree{}},
 					"debug-pod.yaml": &bintree{testExtendedTestdataSriovnetworkDebugPodYaml, map[string]*bintree{}},
 					"dp-daemon.yaml": &bintree{testExtendedTestdataSriovnetworkDpDaemonYaml, map[string]*bintree{}},
+					"dpdk": &bintree{nil, map[string]*bintree{
+						"crd-intelxxv710-dpdk.yaml": &bintree{testExtendedTestdataSriovnetworkDpdkCrdIntelxxv710DpdkYaml, map[string]*bintree{}},
+						"crd-mlx4lx-dpdk.yaml": &bintree{testExtendedTestdataSriovnetworkDpdkCrdMlx4lxDpdkYaml, map[string]*bintree{}},
+						"crd-mlx5-dpdk.yaml": &bintree{testExtendedTestdataSriovnetworkDpdkCrdMlx5DpdkYaml, map[string]*bintree{}},
+						"pod-intelxxv710-dpdk.yaml": &bintree{testExtendedTestdataSriovnetworkDpdkPodIntelxxv710DpdkYaml, map[string]*bintree{}},
+						"pod-mlx4lx-dpdk.yaml": &bintree{testExtendedTestdataSriovnetworkDpdkPodMlx4lxDpdkYaml, map[string]*bintree{}},
+						"pod-mlx5-dpdk.yaml": &bintree{testExtendedTestdataSriovnetworkDpdkPodMlx5DpdkYaml, map[string]*bintree{}},
+					}},
 					"pod-intelxxv710.yaml": &bintree{testExtendedTestdataSriovnetworkPodIntelxxv710Yaml, map[string]*bintree{}},
 					"pod-mlx4lx.yaml": &bintree{testExtendedTestdataSriovnetworkPodMlx4lxYaml, map[string]*bintree{}},
 					"pod-mlx5.yaml": &bintree{testExtendedTestdataSriovnetworkPodMlx5Yaml, map[string]*bintree{}},

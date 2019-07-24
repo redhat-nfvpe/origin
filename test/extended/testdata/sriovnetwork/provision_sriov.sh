@@ -65,7 +65,7 @@ do
 	fi
 
 	# Skip interface with ip configured
-	if [ $(ip route list | grep -q $i) ]; then
+	if ip route list | grep -q $i; then
 		continue
 	fi
 
