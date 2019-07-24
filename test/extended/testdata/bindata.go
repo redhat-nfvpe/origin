@@ -211,10 +211,6 @@
 // test/extended/testdata/sriovnetwork/Dockerfile
 // test/extended/testdata/sriovnetwork/bind_dpdk.sh
 // test/extended/testdata/sriovnetwork/cni-daemon.yaml
-// test/extended/testdata/sriovnetwork/config-map.yaml
-// test/extended/testdata/sriovnetwork/crd-intelxxv710.yaml
-// test/extended/testdata/sriovnetwork/crd-mlx4lx.yaml
-// test/extended/testdata/sriovnetwork/crd-mlx5.yaml
 // test/extended/testdata/sriovnetwork/debug-pod.yaml
 // test/extended/testdata/sriovnetwork/dp-daemon.yaml
 // test/extended/testdata/sriovnetwork/dpdk/config-map.yaml
@@ -224,9 +220,6 @@
 // test/extended/testdata/sriovnetwork/dpdk/pod-intelxxv710-dpdk.yaml
 // test/extended/testdata/sriovnetwork/dpdk/pod-mlx4lx-dpdk.yaml
 // test/extended/testdata/sriovnetwork/dpdk/pod-mlx5-dpdk.yaml
-// test/extended/testdata/sriovnetwork/pod-intelxxv710.yaml
-// test/extended/testdata/sriovnetwork/pod-mlx4lx.yaml
-// test/extended/testdata/sriovnetwork/pod-mlx5.yaml
 // test/extended/testdata/sriovnetwork/provision_sriov.sh
 // test/extended/testdata/sriovnetwork/provision_sriov.sh.bak
 // test/extended/testdata/sriovnetwork/rdma/config-map.yaml
@@ -12441,169 +12434,6 @@ func testExtendedTestdataSriovnetworkCniDaemonYaml() (*asset, error) {
 	return a, nil
 }
 
-var _testExtendedTestdataSriovnetworkConfigMapYaml = []byte(`apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: sriovdp-config
-data:
-  config.json: |
-    {
-        "resourceList": [{
-                "resourceName": "intelxxv710dpdk",
-                "selectors": {
-                    "vendors": ["8086"],
-                    "devices": ["154c"],
-                    "drivers": ["vfio-pci"]
-                }
-            },
-            {
-                "resourceName": "intelxxv710",
-                "selectors": {
-                    "vendors": ["8086"],
-                    "devices": ["154c"]
-                }
-            },
-            {
-                "resourceName": "mlx5",
-                "selectors": {
-                    "vendors": ["15b3"],
-                    "devices": ["1018"]
-                }
-            },
-            {
-                "resourceName": "mlx4lx",
-                "selectors": {
-                    "vendors": ["15b3"],
-                    "devices": ["1016"]
-                }
-            }
-        ]
-    }
-`)
-
-func testExtendedTestdataSriovnetworkConfigMapYamlBytes() ([]byte, error) {
-	return _testExtendedTestdataSriovnetworkConfigMapYaml, nil
-}
-
-func testExtendedTestdataSriovnetworkConfigMapYaml() (*asset, error) {
-	bytes, err := testExtendedTestdataSriovnetworkConfigMapYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "test/extended/testdata/sriovnetwork/config-map.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _testExtendedTestdataSriovnetworkCrdIntelxxv710Yaml = []byte(`apiVersion: "k8s.cni.cncf.io/v1"
-kind: NetworkAttachmentDefinition
-metadata:
-  name: sriov-net-intel-xxv710-suffix
-  annotations:
-    k8s.v1.cni.cncf.io/resourceName: openshift.com/intelxxv710
-spec:
-  config: '{
-  "type": "sriov",
-  "name": "sriov-network",
-  "ipam": {
-    "type": "host-local",
-    "subnet": "10.56.217.0/24",
-    "routes": [{
-      "dst": "0.0.0.0/0"
-    }],
-    "gateway": "10.56.217.1"
-  }
-}'
-`)
-
-func testExtendedTestdataSriovnetworkCrdIntelxxv710YamlBytes() ([]byte, error) {
-	return _testExtendedTestdataSriovnetworkCrdIntelxxv710Yaml, nil
-}
-
-func testExtendedTestdataSriovnetworkCrdIntelxxv710Yaml() (*asset, error) {
-	bytes, err := testExtendedTestdataSriovnetworkCrdIntelxxv710YamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "test/extended/testdata/sriovnetwork/crd-intelxxv710.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _testExtendedTestdataSriovnetworkCrdMlx4lxYaml = []byte(`apiVersion: "k8s.cni.cncf.io/v1"
-kind: NetworkAttachmentDefinition
-metadata:
-  name: sriov-net-connectx4-lx
-  annotations:
-    k8s.v1.cni.cncf.io/resourceName: openshift.com/mlx4lx
-spec:
-  config: '{
-  "type": "sriov",
-  "name": "sriov-network",
-  "ipam": {
-    "type": "host-local",
-    "subnet": "10.56.217.0/24",
-    "routes": [{
-      "dst": "0.0.0.0/0"
-    }],
-    "gateway": "10.56.217.1"
-  }
-}'
-`)
-
-func testExtendedTestdataSriovnetworkCrdMlx4lxYamlBytes() ([]byte, error) {
-	return _testExtendedTestdataSriovnetworkCrdMlx4lxYaml, nil
-}
-
-func testExtendedTestdataSriovnetworkCrdMlx4lxYaml() (*asset, error) {
-	bytes, err := testExtendedTestdataSriovnetworkCrdMlx4lxYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "test/extended/testdata/sriovnetwork/crd-mlx4lx.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _testExtendedTestdataSriovnetworkCrdMlx5Yaml = []byte(`apiVersion: "k8s.cni.cncf.io/v1"
-kind: NetworkAttachmentDefinition
-metadata:
-  name: sriov-net-mlx-connectx5-suffix
-  annotations:
-    k8s.v1.cni.cncf.io/resourceName: openshift.com/mlx5
-spec:
-  config: '{
-  "type": "sriov",
-  "name": "sriov-network",
-  "ipam": {
-    "type": "host-local",
-    "subnet": "10.56.217.0/24",
-    "routes": [{
-      "dst": "0.0.0.0/0"
-    }],
-    "gateway": "10.56.217.1"
-  }
-}'
-`)
-
-func testExtendedTestdataSriovnetworkCrdMlx5YamlBytes() ([]byte, error) {
-	return _testExtendedTestdataSriovnetworkCrdMlx5Yaml, nil
-}
-
-func testExtendedTestdataSriovnetworkCrdMlx5Yaml() (*asset, error) {
-	bytes, err := testExtendedTestdataSriovnetworkCrdMlx5YamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "test/extended/testdata/sriovnetwork/crd-mlx5.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
 var _testExtendedTestdataSriovnetworkDebugPodYaml = []byte(`apiVersion: v1
 kind: Pod
 metadata:
@@ -12999,111 +12829,6 @@ func testExtendedTestdataSriovnetworkDpdkPodMlx5DpdkYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "test/extended/testdata/sriovnetwork/dpdk/pod-mlx5-dpdk.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _testExtendedTestdataSriovnetworkPodIntelxxv710Yaml = []byte(`apiVersion: v1
-kind: Pod
-metadata:
-  name: testpod-intelxxv710
-  annotations:
-    k8s.v1.cni.cncf.io/networks: sriov-net-intel-xxv710-suffix
-spec:
-  containers:
-  - name: appcntr
-    image: centos/tools 
-    imagePullPolicy: IfNotPresent
-    command: [ "/bin/bash", "-c", "--" ]
-    args: [ "while true; do sleep 300000; done;" ]
-    resources:
-      requests:
-        openshift.com/intelxxv710: '1' 
-      limits:
-        openshift.com/intelxxv710: '1'
-`)
-
-func testExtendedTestdataSriovnetworkPodIntelxxv710YamlBytes() ([]byte, error) {
-	return _testExtendedTestdataSriovnetworkPodIntelxxv710Yaml, nil
-}
-
-func testExtendedTestdataSriovnetworkPodIntelxxv710Yaml() (*asset, error) {
-	bytes, err := testExtendedTestdataSriovnetworkPodIntelxxv710YamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "test/extended/testdata/sriovnetwork/pod-intelxxv710.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _testExtendedTestdataSriovnetworkPodMlx4lxYaml = []byte(`apiVersion: v1
-kind: Pod
-metadata:
-  name: testpod-mlx4lx
-  annotations:
-    k8s.v1.cni.cncf.io/networks: sriov-net-connectx4-lx
-spec:
-  containers:
-  - name: appcntr
-    image: centos/tools 
-    imagePullPolicy: IfNotPresent
-    command: [ "/bin/bash", "-c", "--" ]
-    args: [ "while true; do sleep 300000; done;" ]
-    resources:
-      requests:
-        openshift.com/mlx4lx: '1' 
-      limits:
-        openshift.com/mlx4lx: '1'
-`)
-
-func testExtendedTestdataSriovnetworkPodMlx4lxYamlBytes() ([]byte, error) {
-	return _testExtendedTestdataSriovnetworkPodMlx4lxYaml, nil
-}
-
-func testExtendedTestdataSriovnetworkPodMlx4lxYaml() (*asset, error) {
-	bytes, err := testExtendedTestdataSriovnetworkPodMlx4lxYamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "test/extended/testdata/sriovnetwork/pod-mlx4lx.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
-	a := &asset{bytes: bytes, info: info}
-	return a, nil
-}
-
-var _testExtendedTestdataSriovnetworkPodMlx5Yaml = []byte(`apiVersion: v1
-kind: Pod
-metadata:
-  name: testpod-mlx5
-  annotations:
-    k8s.v1.cni.cncf.io/networks: sriov-net-mlx-connectx5-suffix
-spec:
-  containers:
-  - name: appcntr
-    image: centos/tools 
-    imagePullPolicy: IfNotPresent
-    command: [ "/bin/bash", "-c", "--" ]
-    args: [ "while true; do sleep 300000; done;" ]
-    resources:
-      requests:
-        openshift.com/mlx5: '1' 
-      limits:
-        openshift.com/mlx5: '1'
-`)
-
-func testExtendedTestdataSriovnetworkPodMlx5YamlBytes() ([]byte, error) {
-	return _testExtendedTestdataSriovnetworkPodMlx5Yaml, nil
-}
-
-func testExtendedTestdataSriovnetworkPodMlx5Yaml() (*asset, error) {
-	bytes, err := testExtendedTestdataSriovnetworkPodMlx5YamlBytes()
-	if err != nil {
-		return nil, err
-	}
-
-	info := bindataFileInfo{name: "test/extended/testdata/sriovnetwork/pod-mlx5.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -34466,10 +34191,6 @@ var _bindata = map[string]func() (*asset, error){
 	"test/extended/testdata/sriovnetwork/Dockerfile": testExtendedTestdataSriovnetworkDockerfile,
 	"test/extended/testdata/sriovnetwork/bind_dpdk.sh": testExtendedTestdataSriovnetworkBind_dpdkSh,
 	"test/extended/testdata/sriovnetwork/cni-daemon.yaml": testExtendedTestdataSriovnetworkCniDaemonYaml,
-	"test/extended/testdata/sriovnetwork/config-map.yaml": testExtendedTestdataSriovnetworkConfigMapYaml,
-	"test/extended/testdata/sriovnetwork/crd-intelxxv710.yaml": testExtendedTestdataSriovnetworkCrdIntelxxv710Yaml,
-	"test/extended/testdata/sriovnetwork/crd-mlx4lx.yaml": testExtendedTestdataSriovnetworkCrdMlx4lxYaml,
-	"test/extended/testdata/sriovnetwork/crd-mlx5.yaml": testExtendedTestdataSriovnetworkCrdMlx5Yaml,
 	"test/extended/testdata/sriovnetwork/debug-pod.yaml": testExtendedTestdataSriovnetworkDebugPodYaml,
 	"test/extended/testdata/sriovnetwork/dp-daemon.yaml": testExtendedTestdataSriovnetworkDpDaemonYaml,
 	"test/extended/testdata/sriovnetwork/dpdk/config-map.yaml": testExtendedTestdataSriovnetworkDpdkConfigMapYaml,
@@ -34479,9 +34200,6 @@ var _bindata = map[string]func() (*asset, error){
 	"test/extended/testdata/sriovnetwork/dpdk/pod-intelxxv710-dpdk.yaml": testExtendedTestdataSriovnetworkDpdkPodIntelxxv710DpdkYaml,
 	"test/extended/testdata/sriovnetwork/dpdk/pod-mlx4lx-dpdk.yaml": testExtendedTestdataSriovnetworkDpdkPodMlx4lxDpdkYaml,
 	"test/extended/testdata/sriovnetwork/dpdk/pod-mlx5-dpdk.yaml": testExtendedTestdataSriovnetworkDpdkPodMlx5DpdkYaml,
-	"test/extended/testdata/sriovnetwork/pod-intelxxv710.yaml": testExtendedTestdataSriovnetworkPodIntelxxv710Yaml,
-	"test/extended/testdata/sriovnetwork/pod-mlx4lx.yaml": testExtendedTestdataSriovnetworkPodMlx4lxYaml,
-	"test/extended/testdata/sriovnetwork/pod-mlx5.yaml": testExtendedTestdataSriovnetworkPodMlx5Yaml,
 	"test/extended/testdata/sriovnetwork/provision_sriov.sh": testExtendedTestdataSriovnetworkProvision_sriovSh,
 	"test/extended/testdata/sriovnetwork/provision_sriov.sh.bak": testExtendedTestdataSriovnetworkProvision_sriovShBak,
 	"test/extended/testdata/sriovnetwork/rdma/config-map.yaml": testExtendedTestdataSriovnetworkRdmaConfigMapYaml,
@@ -35007,10 +34725,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 					"Dockerfile": &bintree{testExtendedTestdataSriovnetworkDockerfile, map[string]*bintree{}},
 					"bind_dpdk.sh": &bintree{testExtendedTestdataSriovnetworkBind_dpdkSh, map[string]*bintree{}},
 					"cni-daemon.yaml": &bintree{testExtendedTestdataSriovnetworkCniDaemonYaml, map[string]*bintree{}},
-					"config-map.yaml": &bintree{testExtendedTestdataSriovnetworkConfigMapYaml, map[string]*bintree{}},
-					"crd-intelxxv710.yaml": &bintree{testExtendedTestdataSriovnetworkCrdIntelxxv710Yaml, map[string]*bintree{}},
-					"crd-mlx4lx.yaml": &bintree{testExtendedTestdataSriovnetworkCrdMlx4lxYaml, map[string]*bintree{}},
-					"crd-mlx5.yaml": &bintree{testExtendedTestdataSriovnetworkCrdMlx5Yaml, map[string]*bintree{}},
 					"debug-pod.yaml": &bintree{testExtendedTestdataSriovnetworkDebugPodYaml, map[string]*bintree{}},
 					"dp-daemon.yaml": &bintree{testExtendedTestdataSriovnetworkDpDaemonYaml, map[string]*bintree{}},
 					"dpdk": &bintree{nil, map[string]*bintree{
@@ -35022,9 +34736,6 @@ var _bintree = &bintree{nil, map[string]*bintree{
 						"pod-mlx4lx-dpdk.yaml": &bintree{testExtendedTestdataSriovnetworkDpdkPodMlx4lxDpdkYaml, map[string]*bintree{}},
 						"pod-mlx5-dpdk.yaml": &bintree{testExtendedTestdataSriovnetworkDpdkPodMlx5DpdkYaml, map[string]*bintree{}},
 					}},
-					"pod-intelxxv710.yaml": &bintree{testExtendedTestdataSriovnetworkPodIntelxxv710Yaml, map[string]*bintree{}},
-					"pod-mlx4lx.yaml": &bintree{testExtendedTestdataSriovnetworkPodMlx4lxYaml, map[string]*bintree{}},
-					"pod-mlx5.yaml": &bintree{testExtendedTestdataSriovnetworkPodMlx5Yaml, map[string]*bintree{}},
 					"provision_sriov.sh": &bintree{testExtendedTestdataSriovnetworkProvision_sriovSh, map[string]*bintree{}},
 					"provision_sriov.sh.bak": &bintree{testExtendedTestdataSriovnetworkProvision_sriovShBak, map[string]*bintree{}},
 					"rdma": &bintree{nil, map[string]*bintree{

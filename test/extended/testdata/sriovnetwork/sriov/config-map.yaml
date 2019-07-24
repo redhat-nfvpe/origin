@@ -6,14 +6,6 @@ data:
   config.json: |
     {
         "resourceList": [{
-                "resourceName": "intelxxv710dpdk",
-                "selectors": {
-                    "vendors": ["8086"],
-                    "devices": ["154c"],
-                    "drivers": ["vfio-pci"]
-                }
-            },
-            {
                 "resourceName": "intelxxv710",
                 "selectors": {
                     "vendors": ["8086"],

@@ -14,39 +14,12 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("[Area:Networking] SRIOV Network Device Plugin", func() {
+var _ = Describe("[Area:Networking] SRIOV", func() {
 	defer GinkgoRecover()
 
 	InNetworkAttachmentContext(func() {
 		oc := exutil.NewCLI("sriov", exutil.KubeConfigPath())
 		f1 := oc.KubeFramework()
-
-		It("should successfully create/delete SRIOV device plugin daemonsets", func() {
-
-			By("Creating SRIOV device plugin config map")
-			err := oc.AsAdmin().Run("create").
-				Args("-f", DevicePluginConfigFixture, "-n", oc.Namespace()).Execute()
-			Expect(err).NotTo(HaveOccurred())
-
-			By("Creating SRIOV device plugin daemonset")
-			err = oc.AsAdmin().Run("create").
-				Args("-f", DevicePluginDaemonFixture, "-n", oc.Namespace()).Execute()
-			Expect(err).NotTo(HaveOccurred())
-
-			By("Waiting for SRIOV daemonsets become ready")
-			err = wait.PollImmediate(e2e.Poll, 3*time.Minute, func() (bool, error) {
-				err = CheckSRIOVDaemonStatus(f1, oc.Namespace(), sriovDPPodName)
-				if err != nil {
-					return false, nil
-				}
-				return true, nil
-			})
-			Expect(err).NotTo(HaveOccurred())
-
-			By("Deleting SRIOV device plugin daemonset")
-			err = oc.AsAdmin().Run("delete").Args("-f", DevicePluginDaemonFixture).Execute()
-			Expect(err).NotTo(HaveOccurred())
-		})
 
 		It("should report correct SRIOV VF numbers", func() {
 
@@ -113,12 +86,13 @@ var _ = Describe("[Area:Networking] SRIOV Network Device Plugin", func() {
 					By("Creating SR-IOV CRDs")
 					err := oc.AsAdmin().Run("create").
 						Args("-f", fmt.Sprintf("%s/crd-%s.yaml",
-						TestDataFixture, dev.ResourceName)).Execute()
+						SRIOVTestDataFixture, dev.ResourceName)).Execute()
 					Expect(err).NotTo(HaveOccurred())
 				}
 				By("Creating SRIOV device plugin config map")
-				err := oc.AsAdmin().Run("create").
-					Args("-f", DevicePluginConfigFixture, "-n", "kube-system").Execute()
+				err := oc.AsAdmin().Run("create").Args("-f",
+					fmt.Sprintf("%s/%s", SRIOVTestDataFixture, sriovDPConfigMap),
+					"-n", "kube-system").Execute()
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Creating SRIOV device plugin daemonset")
@@ -160,7 +134,7 @@ var _ = Describe("[Area:Networking] SRIOV Network Device Plugin", func() {
 						By("Deleting SR-IOV CRDs")
 						err := oc.AsAdmin().Run("delete").
 							Args("-f", fmt.Sprintf("%s/crd-%s.yaml",
-							TestDataFixture, dev.ResourceName)).Execute()
+							SRIOVTestDataFixture, dev.ResourceName)).Execute()
 						Expect(err).NotTo(HaveOccurred())
 					}
                                         By("Deleting SRIOV device plugin daemonset")
@@ -170,9 +144,9 @@ var _ = Describe("[Area:Networking] SRIOV Network Device Plugin", func() {
                                         Expect(err).NotTo(HaveOccurred())
 
                                         By("Deleting SRIOV device plugin config map")
-                                        err = oc.AsAdmin().Run("delete").
-                                                Args("-f", DevicePluginConfigFixture, "-n", "kube-system").
-						Execute()
+                                        err = oc.AsAdmin().Run("delete").Args("-f",
+						fmt.Sprintf("%s/%s", SRIOVTestDataFixture, sriovDPConfigMap),
+						"-n", "kube-system").Execute()
                                         Expect(err).NotTo(HaveOccurred())
 
                                         By("Deleting SRIOV CNI daemonset")
@@ -183,7 +157,7 @@ var _ = Describe("[Area:Networking] SRIOV Network Device Plugin", func() {
                                 }
                         }()
 
-			time.Sleep(1 * time.Minute)
+			time.Sleep(20 * time.Second)
 			for _, n := range resConfList.ResourceList {
 				templateArgs := fmt.Sprintf(
 					"'{{ index .status.allocatable \"openshift.com/%s\" }}'",
@@ -200,7 +174,7 @@ var _ = Describe("[Area:Networking] SRIOV Network Device Plugin", func() {
 				By("Creating SRIOV Test Pod")
 				err := oc.AsAdmin().Run("create").
 					Args("-f", fmt.Sprintf("%s/pod-%s.yaml",
-					TestDataFixture, n.ResourceName)).Execute()
+					SRIOVTestDataFixture, n.ResourceName)).Execute()
 				Expect(err).NotTo(HaveOccurred())
 
 				By("Waiting for testpod become ready")
@@ -225,7 +199,7 @@ var _ = Describe("[Area:Networking] SRIOV Network Device Plugin", func() {
 			defer func() {
 				for _, n := range resConfList.ResourceList {
 					oc.AsAdmin().Run("delete").Args("-f", fmt.Sprintf("%s/pod-%s.yaml",
-						TestDataFixture, n.ResourceName)).Execute()
+						SRIOVTestDataFixture, n.ResourceName)).Execute()
 				}
 			}()
 		})
