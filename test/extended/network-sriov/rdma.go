@@ -89,6 +89,10 @@ var _ = Describe("[Area:Networking] SRIOV RDMA", func() {
 
 			if len(resConfList.ResourceList) > 0 {
 				for _, dev := range nicMatrix.NICs {
+					// Skip Intel NICs
+					if dev.VendorID == "0x8086" {
+						continue
+					}
 					By("Creating SR-IOV RDMA CRDs")
 					err := oc.AsAdmin().Run("create").
 						Args("-f", fmt.Sprintf("%s/crd-%s-rdma.yaml",
@@ -137,6 +141,10 @@ var _ = Describe("[Area:Networking] SRIOV RDMA", func() {
                         defer func() {
                                 if len(resConfList.ResourceList) > 0 {
 					for _, dev := range nicMatrix.NICs {
+						// Skip Intel NICs
+						if dev.VendorID == "0x8086" {
+							continue
+						}
 						By("Deleting SR-IOV CRDs")
 						err := oc.AsAdmin().Run("delete").
 							Args("-f", fmt.Sprintf("%s/crd-%s-rdma.yaml",

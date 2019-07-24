@@ -34,7 +34,6 @@ var (
 	DebugPodFixture = exutil.FixturePath("testdata", "sriovnetwork", debugPodSpec)
 	CNIDaemonFixture = exutil.FixturePath("testdata", "sriovnetwork", sriovCNISpec)
 	DevicePluginDaemonFixture = exutil.FixturePath("testdata", "sriovnetwork", sriovDPSpec)
-	DevicePluginConfigFixture = exutil.FixturePath("testdata", "sriovnetwork", sriovDPConfigMap)
 )
 
 type ResourceConfig struct {

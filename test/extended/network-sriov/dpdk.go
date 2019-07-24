@@ -14,7 +14,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("[Area:Networking] SRIOV Network Device Plugin", func() {
+var _ = Describe("[Area:Networking] SRIOV DPDK", func() {
 	defer GinkgoRecover()
 
 	InNetworkAttachmentContext(func() {
@@ -206,7 +206,7 @@ var _ = Describe("[Area:Networking] SRIOV Network Device Plugin", func() {
 
                                         By("Deleting SRIOV device plugin config map")
                                         err = oc.AsAdmin().Run("delete").Args("-f",
-						fmt.Sprintf("%s/%s", DPDKTestDataFixture, sriovDPConfigMap)
+						fmt.Sprintf("%s/%s", DPDKTestDataFixture, sriovDPConfigMap),
 						"-n", "kube-system").Execute()
                                         Expect(err).NotTo(HaveOccurred())
 

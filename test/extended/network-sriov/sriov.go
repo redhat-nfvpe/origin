@@ -21,7 +21,7 @@ var _ = Describe("[Area:Networking] SRIOV", func() {
 		oc := exutil.NewCLI("sriov", exutil.KubeConfigPath())
 		f1 := oc.KubeFramework()
 
-		It("should report correct SRIOV VF numbers", func() {
+		It("should report correct sriov VF numbers", func() {
 
 			By("Get all worker nodes")
 			options := metav1.ListOptions{LabelSelector: "node-role.kubernetes.io/worker="}
