@@ -29,6 +29,7 @@ const (
 var (
 	TestDataFixture = exutil.FixturePath("testdata", "sriovnetwork")
 	DPDKTestDataFixture = exutil.FixturePath("testdata", "sriovnetwork", "dpdk")
+	RDMATestDataFixture = exutil.FixturePath("testdata", "sriovnetwork", "rdma")
 	DebugPodFixture = exutil.FixturePath("testdata", "sriovnetwork", debugPodSpec)
 	CNIDaemonFixture = exutil.FixturePath("testdata", "sriovnetwork", sriovCNISpec)
 	DevicePluginDaemonFixture = exutil.FixturePath("testdata", "sriovnetwork", sriovDPSpec)

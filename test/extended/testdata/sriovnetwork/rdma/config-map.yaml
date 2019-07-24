@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sriovdp-config
+data:
+  config.json: |
+    {
+        "resourceList": [{
+                "resourceName": "mlx5",
+                "isRdma": true,
+                "selectors": {
+                    "vendors": ["15b3"],
+                    "devices": ["1018"]
+                }
+            },
+            {
+                "resourceName": "mlx4lx",
+                "isRdma": true,
+                "selectors": {
+                    "vendors": ["15b3"],
+                    "devices": ["1016"]
+                }
+            }
+        ]
+    }
