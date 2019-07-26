@@ -14,7 +14,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("[Area:Networking] SRIOV DPDK", func() {
+var _ = Describe("[Area:Networking][Serial] SRIOV DPDK", func() {
 	defer GinkgoRecover()
 
 	InNetworkAttachmentContext(func() {
