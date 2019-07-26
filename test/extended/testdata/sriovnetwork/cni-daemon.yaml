@@ -33,7 +33,7 @@ spec:
       serviceAccountName: sriov-cni
       containers:
       - name: sriov-cni
-        image: nfvpe/sriov-cni
+        image: quay.io/openshift/origin-sriov-cni:4.2
         securityContext:
           privileged: true
         volumeMounts:
