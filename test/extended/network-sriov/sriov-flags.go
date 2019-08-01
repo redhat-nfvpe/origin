@@ -2,6 +2,7 @@ package sriovnetwork
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -14,14 +15,14 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("[Area:Networking][Serial] SRIOV", func() {
+var _ = Describe("[Area:Networking][Serial] SRIOV VF Flags", func() {
 	defer GinkgoRecover()
 
 	InNetworkAttachmentContext(func() {
 		oc := exutil.NewCLI("sriov", exutil.KubeConfigPath())
 		f1 := oc.KubeFramework()
 
-		It("should report correct sriov VF numbers", func() {
+		It("should report correct sriov VF flags", func() {
 
 			By("Get all worker nodes")
 			options := metav1.ListOptions{LabelSelector: "node-role.kubernetes.io/worker="}
@@ -83,9 +84,9 @@ var _ = Describe("[Area:Networking][Serial] SRIOV", func() {
 
 			if len(resConfList.ResourceList) > 0 {
 				for _, dev := range nicMatrix.NICs {
-					By("Creating SR-IOV CRDs")
+					By("Creating SR-IOV VF Flag CRDs")
 					err := oc.AsAdmin().Run("create").
-						Args("-f", fmt.Sprintf("%s/crd-%s.yaml",
+						Args("-f", fmt.Sprintf("%s/crd-vf-flags-%s.yaml",
 						SRIOVTestDataFixture, dev.ResourceName)).Execute()
 					Expect(err).NotTo(HaveOccurred())
 				}
@@ -133,7 +134,7 @@ var _ = Describe("[Area:Networking][Serial] SRIOV", func() {
 					for _, dev := range nicMatrix.NICs {
 						By("Deleting SR-IOV CRDs")
 						err := oc.AsAdmin().Run("delete").
-							Args("-f", fmt.Sprintf("%s/crd-%s.yaml",
+							Args("-f", fmt.Sprintf("%s/crd-vf-flags-%s.yaml",
 							SRIOVTestDataFixture, dev.ResourceName)).Execute()
 						Expect(err).NotTo(HaveOccurred())
 					}
@@ -187,15 +188,22 @@ var _ = Describe("[Area:Networking][Serial] SRIOV", func() {
 				})
 				Expect(err).NotTo(HaveOccurred())
 
-				out, err := oc.AsAdmin().Run("exec").
-					Args("-p", fmt.Sprintf("testpod-%s", n.ResourceName),
-					"--", "/bin/bash", "-c", "ip link show dev net1").Output()
+				count, err := strconv.Atoi(n.ResourceNum)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(out).NotTo(ContainSubstring(fmt.Sprintf("does not exist")))
-				Expect(out).To(ContainSubstring(fmt.Sprintf("mtu")))
-				By(fmt.Sprintf("Pod net1 output: %s", out))
 
-				out, err = oc.AsAdmin().Run("exec").
+				for i := 0; i < count; i++ {
+					out, err := oc.AsAdmin().Run("exec").
+						Args("-p", fmt.Sprintf("testpod-%s", n.ResourceName),
+							"--", "/bin/bash", "-c", "ip link show dev net1 | grep \"vf %s\",i", n.ResourceNum).Output()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(out).NotTo(ContainSubstring(fmt.Sprintf("does not exist")))
+					Expect(out).To(ContainSubstring(fmt.Sprintf("spoof checking off")))
+					Expect(out).To(ContainSubstring(fmt.Sprintf("trust on")))
+					Expect(out).To(ContainSubstring(fmt.Sprintf("max_tx_rate 100Mbps")))
+					By(fmt.Sprintf("Pod net1 output: %s", out))
+				}
+
+				out, err := oc.AsAdmin().Run("exec").
 					Args("-p", fmt.Sprintf("testpod-%s", n.ResourceName),
 						"--", "/bin/bash", "-c", "ls /etc/podnetinfo/").Output()
 				Expect(err).NotTo(HaveOccurred())
@@ -209,6 +217,31 @@ var _ = Describe("[Area:Networking][Serial] SRIOV", func() {
 				for _, n := range resConfList.ResourceList {
 					oc.AsAdmin().Run("delete").Args("-f", fmt.Sprintf("%s/pod-%s.yaml",
 						SRIOVTestDataFixture, n.ResourceName)).Execute()
+
+					By("Waiting for testpod to be deleted")
+					err := wait.PollImmediate(e2e.Poll, 3*time.Minute, func() (bool, error) {
+						err := CheckPodStatus(oc, fmt.Sprintf("testpod-%s", n.ResourceName))
+						if err == nil {
+							return false, nil
+						}
+						return true, nil
+					})
+					Expect(err).To(HaveOccurred())
+
+					count, err := strconv.Atoi(n.ResourceNum)
+					Expect(err).NotTo(HaveOccurred())
+
+					for i := 0; i < count; i++ {
+						out, err := oc.AsAdmin().Run("exec").
+							Args("-p", fmt.Sprintf("testpod-%s", n.ResourceName),
+								"--", "/bin/bash", "-c", "ip link show dev net1 | grep \"vf %s\",i", n.ResourceNum).Output()
+						Expect(err).NotTo(HaveOccurred())
+						Expect(out).NotTo(ContainSubstring(fmt.Sprintf("does not exist")))
+						Expect(out).To(ContainSubstring(fmt.Sprintf("spoof checking on")))
+						Expect(out).To(ContainSubstring(fmt.Sprintf("trust off")))
+						Expect(out).NotTo(ContainSubstring(fmt.Sprintf("max_tx_rate")))
+						By(fmt.Sprintf("Pod net1 output: %s", out))
+					}
 				}
 			}()
 		})
