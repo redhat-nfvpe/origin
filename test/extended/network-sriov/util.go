@@ -24,6 +24,10 @@ const (
 	sriovCNISpec     = "cni-daemon.yaml"
 	sriovDPConfigMap = "config-map.yaml"
 	sriovNumVFs      = "4"
+	sriovAcSrvName   = "network-resources-injector"
+	sriovAcSAName    = "network-resources-injector-sa"
+	sriovACSrvSpec    = "server.yaml"
+	sriovACAuthSpec   = "auth.yaml"
 )
 
 var (
@@ -34,6 +38,8 @@ var (
 	DebugPodFixture = exutil.FixturePath("testdata", "sriovnetwork", debugPodSpec)
 	CNIDaemonFixture = exutil.FixturePath("testdata", "sriovnetwork", sriovCNISpec)
 	DevicePluginDaemonFixture = exutil.FixturePath("testdata", "sriovnetwork", sriovDPSpec)
+	AdmissionControllerServerDaemonFixture = exutil.FixturePath("testdata", "sriovnetwork", sriovACSrvSpec)
+	AdmissionControllerAuthDaemonFixture = exutil.FixturePath("testdata", "sriovnetwork", sriovACAuthSpec)
 )
 
 type ResourceConfig struct {
@@ -163,6 +169,18 @@ func CheckSRIOVDaemonStatus(f *e2e.Framework, namespace string, name string) err
 	if desired != scheduled && desired != ready {
 		return fmt.Errorf("Error in daemon status. desired: %d, scheduled: %d, ready: %d",
 			desired, scheduled, ready)
+	}
+	return nil
+}
+
+func CheckServiceAccountStatus(oc *exutil.CLI, name string) error {
+	sa, err := oc.AdminKubeClient().CoreV1().ServiceAccounts(oc.Namespace()).
+		Get(name, metav1.GetOptions{})
+	if err != nil {
+		return fmt.Errorf("Could not get %s service account from v1.", name)
+	}
+	if sa == nil {
+		return fmt.Errorf("Could not find %s service account from v1.", name)
 	}
 	return nil
 }
