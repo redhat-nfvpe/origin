@@ -226,6 +226,8 @@
 // test/extended/testdata/sriovnetwork/rdma/crd-mlx5-rdma.yaml
 // test/extended/testdata/sriovnetwork/rdma/pod-mlx4lx-rdma.yaml
 // test/extended/testdata/sriovnetwork/rdma/pod-mlx5-rdma.yaml
+// test/extended/testdata/sriovnetwork/sriov/admission-controller-service-account.yaml
+// test/extended/testdata/sriovnetwork/sriov/admission-controller.yaml
 // test/extended/testdata/sriovnetwork/sriov/config-map.yaml
 // test/extended/testdata/sriovnetwork/sriov/crd-intelxxv710.yaml
 // test/extended/testdata/sriovnetwork/sriov/crd-mlx4lx.yaml
@@ -13145,6 +13147,260 @@ func testExtendedTestdataSriovnetworkRdmaPodMlx5RdmaYaml() (*asset, error) {
 	}
 
 	info := bindataFileInfo{name: "test/extended/testdata/sriovnetwork/rdma/pod-mlx5-rdma.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _testExtendedTestdataSriovnetworkSriovAdmissionControllerServiceAccountYaml = []byte(`# Copyright (c) 2019 Intel Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http:#www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  namespace: kube-system
+  name: network-resources-injector-sa
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: network-resources-injector-sa-secret
+  namespace: kube-system
+  annotations:
+    kubernetes.io/service-account.name: network-resources-injector-sa
+type: kubernetes.io/service-account-token
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: network-resources-injector
+rules:
+- apiGroups:
+  - ""
+  - k8s.cni.cncf.io
+  resources:
+  - pods
+  - network-attachment-definitions
+  verbs:
+  - '*'
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: network-resources-injector-certificates
+rules:
+- apiGroups:
+  - certificates.k8s.io
+  resources:
+  - certificatesigningrequests
+  - certificatesigningrequests/approval
+  verbs:
+  - '*'
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: network-resources-injector-secrets
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - '*'
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: network-resources-injector-webhook-configs
+rules:
+- apiGroups:
+  - admissionregistration.k8s.io
+  resources:
+  - mutatingwebhookconfigurations
+  - validatingwebhookconfigurations
+  verbs:
+  - '*'
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: network-resources-injector-service
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - services
+  verbs:
+  - '*'
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: network-resources-injector-role-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: network-resources-injector
+subjects:
+- kind: ServiceAccount
+  name: network-resources-injector-sa
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: network-resources-injector-certificates-role-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: network-resources-injector-certificates
+subjects:
+- kind: ServiceAccount
+  name: network-resources-injector-sa
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: network-resources-injector-secrets-role-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: network-resources-injector-secrets
+subjects:
+- kind: ServiceAccount
+  name: network-resources-injector-sa
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: network-resources-injector-webhook-configs-role-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: network-resources-injector-webhook-configs
+subjects:
+- kind: ServiceAccount
+  name: network-resources-injector-sa
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: network-resources-injector-service-role-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: network-resources-injector-service
+subjects:
+- kind: ServiceAccount
+  name: network-resources-injector-sa
+  namespace: kube-system
+`)
+
+func testExtendedTestdataSriovnetworkSriovAdmissionControllerServiceAccountYamlBytes() ([]byte, error) {
+	return _testExtendedTestdataSriovnetworkSriovAdmissionControllerServiceAccountYaml, nil
+}
+
+func testExtendedTestdataSriovnetworkSriovAdmissionControllerServiceAccountYaml() (*asset, error) {
+	bytes, err := testExtendedTestdataSriovnetworkSriovAdmissionControllerServiceAccountYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "test/extended/testdata/sriovnetwork/sriov/admission-controller-service-account.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _testExtendedTestdataSriovnetworkSriovAdmissionControllerYaml = []byte(`# Copyright (c) 2019 Intel Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http:#www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: network-resources-injector
+  name: network-resources-injector
+  namespace: kube-system
+spec:
+  serviceAccount: network-resources-injector-sa
+  containers:
+  - name: webhook-server
+    image: network-resources-injector:latest
+    imagePullPolicy: IfNotPresent
+    command:
+    - webhook
+    args:
+    - -bind-address=0.0.0.0
+    - -port=443
+    - -tls-private-key-file=/etc/tls/tls.key
+    - -tls-cert-file=/etc/tls/tls.crt
+    - -alsologtostderr=true
+    volumeMounts:
+    - mountPath: /etc/tls
+      name: tls
+  initContainers:
+  - name: installer
+    image: network-resources-injector:latest
+    imagePullPolicy: IfNotPresent
+    command:
+    - installer
+    args:
+    - -name=network-resources-injector
+    - -namespace=kube-system
+    - -alsologtostderr
+    volumeMounts:
+    - name: tls
+      mountPath: /etc/tls
+  volumes:
+  - name: tls
+    emptyDir: {}
+
+# For third-party certificate, use secret resource
+# instead of self-generated one from installer as below:
+#
+# 1) Remove initContainers from Pod spec.
+# 2) Replace `+"`"+`emptyDir: {}`+"`"+` with below config
+#
+#   secret:
+#     secretName: network-resources-injector-secret
+`)
+
+func testExtendedTestdataSriovnetworkSriovAdmissionControllerYamlBytes() ([]byte, error) {
+	return _testExtendedTestdataSriovnetworkSriovAdmissionControllerYaml, nil
+}
+
+func testExtendedTestdataSriovnetworkSriovAdmissionControllerYaml() (*asset, error) {
+	bytes, err := testExtendedTestdataSriovnetworkSriovAdmissionControllerYamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "test/extended/testdata/sriovnetwork/sriov/admission-controller.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -34091,6 +34347,8 @@ var _bindata = map[string]func() (*asset, error){
 	"test/extended/testdata/sriovnetwork/rdma/crd-mlx5-rdma.yaml": testExtendedTestdataSriovnetworkRdmaCrdMlx5RdmaYaml,
 	"test/extended/testdata/sriovnetwork/rdma/pod-mlx4lx-rdma.yaml": testExtendedTestdataSriovnetworkRdmaPodMlx4lxRdmaYaml,
 	"test/extended/testdata/sriovnetwork/rdma/pod-mlx5-rdma.yaml": testExtendedTestdataSriovnetworkRdmaPodMlx5RdmaYaml,
+	"test/extended/testdata/sriovnetwork/sriov/admission-controller-service-account.yaml": testExtendedTestdataSriovnetworkSriovAdmissionControllerServiceAccountYaml,
+	"test/extended/testdata/sriovnetwork/sriov/admission-controller.yaml": testExtendedTestdataSriovnetworkSriovAdmissionControllerYaml,
 	"test/extended/testdata/sriovnetwork/sriov/config-map.yaml": testExtendedTestdataSriovnetworkSriovConfigMapYaml,
 	"test/extended/testdata/sriovnetwork/sriov/crd-intelxxv710.yaml": testExtendedTestdataSriovnetworkSriovCrdIntelxxv710Yaml,
 	"test/extended/testdata/sriovnetwork/sriov/crd-mlx4lx.yaml": testExtendedTestdataSriovnetworkSriovCrdMlx4lxYaml,
@@ -34630,6 +34888,8 @@ var _bintree = &bintree{nil, map[string]*bintree{
 						"pod-mlx5-rdma.yaml": &bintree{testExtendedTestdataSriovnetworkRdmaPodMlx5RdmaYaml, map[string]*bintree{}},
 					}},
 					"sriov": &bintree{nil, map[string]*bintree{
+						"admission-controller-service-account.yaml": &bintree{testExtendedTestdataSriovnetworkSriovAdmissionControllerServiceAccountYaml, map[string]*bintree{}},
+						"admission-controller.yaml": &bintree{testExtendedTestdataSriovnetworkSriovAdmissionControllerYaml, map[string]*bintree{}},
 						"config-map.yaml": &bintree{testExtendedTestdataSriovnetworkSriovConfigMapYaml, map[string]*bintree{}},
 						"crd-intelxxv710.yaml": &bintree{testExtendedTestdataSriovnetworkSriovCrdIntelxxv710Yaml, map[string]*bintree{}},
 						"crd-mlx4lx.yaml": &bintree{testExtendedTestdataSriovnetworkSriovCrdMlx4lxYaml, map[string]*bintree{}},

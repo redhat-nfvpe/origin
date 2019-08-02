@@ -26,8 +26,8 @@ const (
 	sriovNumVFs      = "4"
 	sriovAcSrvName   = "network-resources-injector"
 	sriovAcSAName    = "network-resources-injector-sa"
-	sriovACSrvSpec    = "server.yaml"
-	sriovACAuthSpec   = "auth.yaml"
+	sriovACSrvSpec    = "admission-controller.yaml"
+	sriovACAuthSpec   = "admission-controller-service-account.yaml"
 )
 
 var (
