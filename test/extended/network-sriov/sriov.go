@@ -125,21 +125,6 @@ var _ = Describe("[Area:Networking][Serial] SRIOV", func() {
 				})
 				Expect(err).NotTo(HaveOccurred())
 
-				By("Creating Admission Controller")
-				err = oc.AsAdmin().Run("apply").
-					Args("-f", AdmissionControllerServerDaemonFixture, "-n", "kube-system").Execute()
-				Expect(err).NotTo(HaveOccurred())
-
-				By("Waiting for SRIOV Admission Controller Server to become ready")
-				err = wait.PollImmediate(e2e.Poll, 3*time.Minute, func() (bool, error) {
-					err = CheckSRIOVDaemonStatus(f1, "kube-system", sriovAcSrvName)
-					if err != nil {
-						return false, nil
-					}
-					return true, nil
-				})
-				Expect(err).NotTo(HaveOccurred())
-
 				By("Creating Admission Controller Service Account")
 				err = oc.AsAdmin().Run("apply").
 					Args("-f", AdmissionControllerAuthDaemonFixture, "-n", "kube-system").Execute()
@@ -148,6 +133,21 @@ var _ = Describe("[Area:Networking][Serial] SRIOV", func() {
 				By("Waiting for SRIOV Admission Controller Service Account to become ready")
 				err = wait.PollImmediate(e2e.Poll, 3*time.Minute, func() (bool, error) {
 					err = CheckServiceAccountStatus(oc, sriovAcSAName)
+					if err != nil {
+						return false, nil
+					}
+					return true, nil
+				})
+				Expect(err).NotTo(HaveOccurred())
+
+				By("Creating Admission Controller")
+				err = oc.AsAdmin().Run("apply").
+					Args("-f", AdmissionControllerServerDaemonFixture, "-n", "kube-system").Execute()
+				Expect(err).NotTo(HaveOccurred())
+
+				By("Waiting for SRIOV Admission Controller Server to become ready")
+				err = wait.PollImmediate(e2e.Poll, 3*time.Minute, func() (bool, error) {
+					err = CheckSRIOVDaemonStatus(f1, "kube-system", sriovAcSrvName)
 					if err != nil {
 						return false, nil
 					}
