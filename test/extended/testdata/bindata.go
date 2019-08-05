@@ -234,6 +234,7 @@
 // test/extended/testdata/sriovnetwork/sriov/crd-mlx5.yaml
 // test/extended/testdata/sriovnetwork/sriov/crd-vf-flags-intelxxv710.yaml
 // test/extended/testdata/sriovnetwork/sriov/crd-vf-flags-mlx4lx.yaml
+// test/extended/testdata/sriovnetwork/sriov/crd-vf-flags-mlx5.yaml
 // test/extended/testdata/sriovnetwork/sriov/pod-intelxxv710.yaml
 // test/extended/testdata/sriovnetwork/sriov/pod-mlx4lx.yaml
 // test/extended/testdata/sriovnetwork/sriov/pod-mlx5.yaml
@@ -13635,6 +13636,45 @@ func testExtendedTestdataSriovnetworkSriovCrdVfFlagsMlx4lxYaml() (*asset, error)
 	}
 
 	info := bindataFileInfo{name: "test/extended/testdata/sriovnetwork/sriov/crd-vf-flags-mlx4lx.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _testExtendedTestdataSriovnetworkSriovCrdVfFlagsMlx5Yaml = []byte(`apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: sriov-net-mlx-connectx5-suffix
+  annotations:
+    k8s.v1.cni.cncf.io/resourceName: openshift.com/mlx5
+spec:
+  config: '{
+  "type": "sriov",
+  "name": "sriov-network",
+  "ipam": {
+    "type": "host-local",
+    "subnet": "10.56.217.0/24",
+    "routes": [{
+      "dst": "0.0.0.0/0"
+    }],
+    "gateway": "10.56.217.1"
+  },
+  "max_tx_rate": 100,
+  "spoofchk":    "off",
+  "trust":       "on"
+}'
+`)
+
+func testExtendedTestdataSriovnetworkSriovCrdVfFlagsMlx5YamlBytes() ([]byte, error) {
+	return _testExtendedTestdataSriovnetworkSriovCrdVfFlagsMlx5Yaml, nil
+}
+
+func testExtendedTestdataSriovnetworkSriovCrdVfFlagsMlx5Yaml() (*asset, error) {
+	bytes, err := testExtendedTestdataSriovnetworkSriovCrdVfFlagsMlx5YamlBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "test/extended/testdata/sriovnetwork/sriov/crd-vf-flags-mlx5.yaml", size: 0, mode: os.FileMode(0), modTime: time.Unix(0, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -34395,6 +34435,7 @@ var _bindata = map[string]func() (*asset, error){
 	"test/extended/testdata/sriovnetwork/sriov/crd-mlx5.yaml": testExtendedTestdataSriovnetworkSriovCrdMlx5Yaml,
 	"test/extended/testdata/sriovnetwork/sriov/crd-vf-flags-intelxxv710.yaml": testExtendedTestdataSriovnetworkSriovCrdVfFlagsIntelxxv710Yaml,
 	"test/extended/testdata/sriovnetwork/sriov/crd-vf-flags-mlx4lx.yaml": testExtendedTestdataSriovnetworkSriovCrdVfFlagsMlx4lxYaml,
+	"test/extended/testdata/sriovnetwork/sriov/crd-vf-flags-mlx5.yaml": testExtendedTestdataSriovnetworkSriovCrdVfFlagsMlx5Yaml,
 	"test/extended/testdata/sriovnetwork/sriov/pod-intelxxv710.yaml": testExtendedTestdataSriovnetworkSriovPodIntelxxv710Yaml,
 	"test/extended/testdata/sriovnetwork/sriov/pod-mlx4lx.yaml": testExtendedTestdataSriovnetworkSriovPodMlx4lxYaml,
 	"test/extended/testdata/sriovnetwork/sriov/pod-mlx5.yaml": testExtendedTestdataSriovnetworkSriovPodMlx5Yaml,
@@ -34937,6 +34978,7 @@ var _bintree = &bintree{nil, map[string]*bintree{
 						"crd-mlx5.yaml": &bintree{testExtendedTestdataSriovnetworkSriovCrdMlx5Yaml, map[string]*bintree{}},
 						"crd-vf-flags-intelxxv710.yaml": &bintree{testExtendedTestdataSriovnetworkSriovCrdVfFlagsIntelxxv710Yaml, map[string]*bintree{}},
 						"crd-vf-flags-mlx4lx.yaml": &bintree{testExtendedTestdataSriovnetworkSriovCrdVfFlagsMlx4lxYaml, map[string]*bintree{}},
+						"crd-vf-flags-mlx5.yaml": &bintree{testExtendedTestdataSriovnetworkSriovCrdVfFlagsMlx5Yaml, map[string]*bintree{}},
 						"pod-intelxxv710.yaml": &bintree{testExtendedTestdataSriovnetworkSriovPodIntelxxv710Yaml, map[string]*bintree{}},
 						"pod-mlx4lx.yaml": &bintree{testExtendedTestdataSriovnetworkSriovPodMlx4lxYaml, map[string]*bintree{}},
 						"pod-mlx5.yaml": &bintree{testExtendedTestdataSriovnetworkSriovPodMlx5Yaml, map[string]*bintree{}},
