@@ -13577,7 +13577,7 @@ spec:
       "dst": "0.0.0.0/0"
     }],
     "gateway": "10.56.217.1"
-  }
+  },
   "max_tx_rate": 100,
   "spoofchk":    "off",
   "trust":       "on"
