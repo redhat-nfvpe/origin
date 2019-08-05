@@ -1,7 +1,7 @@
 apiVersion: "k8s.cni.cncf.io/v1"
 kind: NetworkAttachmentDefinition
 metadata:
-  name: sriov-net-intel-xxv710-suffix
+  name: sriov-net-vf-flags-intel-xxv710-suffix
   annotations:
     k8s.v1.cni.cncf.io/resourceName: openshift.com/intelxxv710
 spec:

@@ -1,7 +1,7 @@
 apiVersion: "k8s.cni.cncf.io/v1"
 kind: NetworkAttachmentDefinition
 metadata:
-  name: sriov-net-mlx-connectx5-suffix
+  name: sriov-net-vf-flags-mlx-connectx5-suffix
   annotations:
     k8s.v1.cni.cncf.io/resourceName: openshift.com/mlx5
 spec:
