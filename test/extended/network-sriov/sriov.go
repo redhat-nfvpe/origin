@@ -132,7 +132,7 @@ var _ = Describe("[Area:Networking][Serial] SRIOV", func() {
 
 				By("Waiting for SRIOV Admission Controller Service Account to become ready")
 				err = wait.PollImmediate(e2e.Poll, 3*time.Minute, func() (bool, error) {
-					err = CheckServiceAccountStatus(oc, sriovAcSAName)
+					err = CheckServiceAccountStatus(oc, "kube-system", sriovAcSAName)
 					if err != nil {
 						return false, nil
 					}

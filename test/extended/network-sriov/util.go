@@ -173,8 +173,8 @@ func CheckSRIOVDaemonStatus(f *e2e.Framework, namespace string, name string) err
 	return nil
 }
 
-func CheckServiceAccountStatus(oc *exutil.CLI, name string) error {
-	sa, err := oc.AdminKubeClient().CoreV1().ServiceAccounts(oc.Namespace()).
+func CheckServiceAccountStatus(oc *exutil.CLI, namespace string, name string) error {
+	sa, err := oc.AdminKubeClient().CoreV1().ServiceAccounts(namespace).
 		Get(name, metav1.GetOptions{})
 	if err != nil {
 		return fmt.Errorf("Could not get %s service account from v1.", name)
