@@ -12404,7 +12404,7 @@ spec:
   serviceAccount: network-resources-injector-sa
   containers:
   - name: webhook-server
-    image: network-resources-injector:latest
+    image: quay.io/openshift/origin-sriov-dp-admission-controller:4.2
     imagePullPolicy: IfNotPresent
     command:
     - webhook
@@ -12419,7 +12419,7 @@ spec:
       name: tls
   initContainers:
   - name: installer
-    image: network-resources-injector:latest
+    image: quay.io/openshift/origin-sriov-dp-admission-controller:4.2
     imagePullPolicy: IfNotPresent
     command:
     - installer
