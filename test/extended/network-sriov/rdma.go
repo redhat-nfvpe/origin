@@ -214,14 +214,9 @@ var _ = Describe("[Area:Networking][Serial] SRIOV RDMA", func() {
 					"--", "/bin/bash", "-c", "ls /dev/infiniband").Output()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(out).NotTo(ContainSubstring(fmt.Sprintf("does not exist")))
+				oc.AsAdmin().Run("delete").Args("-f", fmt.Sprintf("%s/pod-%s-rdma.yaml",
+					RDMATestDataFixture, n.ResourceName)).Execute()
 			}
-
-			defer func() {
-				for _, n := range resConfList.ResourceList {
-					oc.AsAdmin().Run("delete").Args("-f", fmt.Sprintf("%s/pod-%s-rdma.yaml",
-						RDMATestDataFixture, n.ResourceName)).Execute()
-				}
-			}()
 		})
 	})
 })

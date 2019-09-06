@@ -233,14 +233,9 @@ var _ = Describe("[Area:Networking][Serial] SRIOV", func() {
 				Expect(out).To(ContainSubstring(fmt.Sprintf("labels")))
 				Expect(out).To(ContainSubstring(fmt.Sprintf("annotations")))
 				By(fmt.Sprintf("Pod /etc/podnetinfo/ output: %s", out))
+				oc.AsAdmin().Run("delete").Args("-f", fmt.Sprintf("%s/pod-%s.yaml",
+					SRIOVTestDataFixture, n.ResourceName)).Execute()
 			}
-
-			defer func() {
-				for _, n := range resConfList.ResourceList {
-					oc.AsAdmin().Run("delete").Args("-f", fmt.Sprintf("%s/pod-%s.yaml",
-						SRIOVTestDataFixture, n.ResourceName)).Execute()
-				}
-			}()
 		})
 	})
 })

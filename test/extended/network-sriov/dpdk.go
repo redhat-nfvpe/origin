@@ -287,14 +287,9 @@ var _ = Describe("[Area:Networking][Serial] SRIOV DPDK", func() {
 					Expect(out).To(ContainSubstring(fmt.Sprintf("mtu")))
 					By(fmt.Sprintf("Pod net1 output: %s", out))
 				}
+				oc.AsAdmin().Run("delete").Args("-f", fmt.Sprintf("%s/pod-%s-dpdk.yaml",
+					DPDKTestDataFixture, n.ResourceName)).Execute()
 			}
-
-			defer func() {
-				for _, n := range resConfList.ResourceList {
-					oc.AsAdmin().Run("delete").Args("-f", fmt.Sprintf("%s/pod-%s-dpdk.yaml",
-						DPDKTestDataFixture, n.ResourceName)).Execute()
-				}
-			}()
 		})
 	})
 })
