@@ -32,16 +32,22 @@ var _ = Describe("[Area:Networking][Serial] SRIOV DPDK", func() {
 			resConfList := ResourceConfList{}
 			nicMatrix := InitNICMatrix()
 
+			var isMaster bool
+
 			By("Provision SR-IOV and Bind to vfio-pci driver on worker nodes")
 			for _, n := range workerNodes.Items {
 
 				for _, m := range masterNodes.Items {
 					if n.GetName() == m.GetName() {
 						e2e.Logf("Skipping master node %s.", n.GetName())
-						continue
+						isMaster = true
+						break
 					}
 				}
 
+				if isMaster {
+					continue
+				}
 				err := oc.AsAdmin().Run("label").
 					Args("node", n.GetName(), "node.sriovStatus=provisioning").Execute()
 				Expect(err).NotTo(HaveOccurred())
