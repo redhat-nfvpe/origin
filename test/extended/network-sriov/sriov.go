@@ -26,6 +26,8 @@ var _ = Describe("[Area:Networking][Serial] SRIOV", func() {
 			By("Get all worker nodes")
 			options := metav1.ListOptions{LabelSelector: "node-role.kubernetes.io/worker="}
 			workerNodes, _ := f1.ClientSet.CoreV1().Nodes().List(options)
+			options = metav1.ListOptions{LabelSelector: "node-role.kubernetes.io/master="}
+			masterNodes, _ := f1.ClientSet.CoreV1().Nodes().List(options)
 
 			resConfList := ResourceConfList{}
 			nicMatrix := InitNICMatrix()
@@ -33,9 +35,22 @@ var _ = Describe("[Area:Networking][Serial] SRIOV", func() {
 			By("Provision SR-IOV on worker nodes")
 			for _, n := range workerNodes.Items {
 
+				for _, m := range masterNodes.Items {
+					if n.GetName() == m.GetName() {
+						e2e.Logf("Skipping master node %s.", n.GetName())
+						continue
+					}
+				}
+
 				err := oc.AsAdmin().Run("label").
 					Args("node", n.GetName(), "node.sriovStatus=provisioning").Execute()
 				Expect(err).NotTo(HaveOccurred())
+
+				defer func() {
+					err = oc.AsAdmin().Run("label").
+						Args("node", n.GetName(), "node.sriovStatus-").Execute()
+					Expect(err).NotTo(HaveOccurred())
+				}()
 
 				By(fmt.Sprintf("Creating SRIOV debug pod on Node %s", n.GetName()))
 				err = CreateDebugPod(oc)
@@ -76,9 +91,6 @@ var _ = Describe("[Area:Networking][Serial] SRIOV", func() {
 				err = DeleteDebugPod(oc)
 				Expect(err).NotTo(HaveOccurred())
 
-				err = oc.AsAdmin().Run("label").
-					Args("node", n.GetName(), "node.sriovStatus-").Execute()
-				Expect(err).NotTo(HaveOccurred())
 			}
 
 			if len(resConfList.ResourceList) > 0 {
