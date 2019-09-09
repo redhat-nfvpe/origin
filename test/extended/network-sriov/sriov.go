@@ -148,9 +148,10 @@ var _ = Describe("[Area:Networking][Serial] SRIOV", func() {
 				})
 				Expect(err).NotTo(HaveOccurred())
 
+				By("Creating SRIOV Admission Controller Webhook")
 				_, err = exec.Command("sh", "-c",
-					"cat test/extended/testdata/sriovnetwork/sriov-admission-controller-webhook.yaml" +
-					"| test/extended/testdata/sriovnetwork/sriov-webhook-patch-bundle.sh" +
+					"cat /home/slave1/workspace/OCP-SRIOV-E2E/origin/test/extended/testdata/sriovnetwork/sriov-admission-controller-webhook.yaml" +
+					"| /home/slave1/workspace/OCP-SRIOV-E2E/origin/test/extended/testdata/sriovnetwork/sriov-webhook-patch-bundle.sh" +
 					"| oc create -f - -n kube-system").CombinedOutput()
 				Expect(err).NotTo(HaveOccurred())
 
