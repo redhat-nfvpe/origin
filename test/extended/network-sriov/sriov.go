@@ -37,6 +37,7 @@ var _ = Describe("[Area:Networking][Serial] SRIOV", func() {
 			By("Provision SR-IOV on worker nodes")
 			for _, n := range workerNodes.Items {
 
+				isMaster = false
 				for _, m := range masterNodes.Items {
 					if n.GetName() == m.GetName() {
 						e2e.Logf("Skipping master node %s.", n.GetName())
