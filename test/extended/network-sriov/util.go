@@ -16,18 +16,24 @@ import (
 )
 
 const (
-	debugPodName     = "sriov-debug-pod"
-	debugPodSpec     = "debug-pod.yaml"
-	sriovDPPodName   = "sriov-device-plugin"
-	sriovCNIPodName  = "sriov-cni"
-	sriovDPSpec      = "dp-daemon.yaml"
-	sriovCNISpec     = "cni-daemon.yaml"
-	sriovDPConfigMap = "config-map.yaml"
-	sriovNumVFs      = "4"
-	sriovAcSrvName   = "network-resources-injector"
-	sriovAcSAName    = "network-resources-injector-sa"
-	sriovACSrvSpec    = "admission-controller.yaml"
-	sriovACAuthSpec   = "admission-controller-service-account.yaml"
+	debugPodName         = "sriov-debug-pod"
+	debugPodSpec         = "debug-pod.yaml"
+	sriovDPPodName       = "sriov-device-plugin"
+	sriovCNIPodName      = "sriov-cni"
+	sriovDPSpec          = "dp-daemon.yaml"
+	sriovCNISpec         = "cni-daemon.yaml"
+	sriovDPConfigMap     = "config-map.yaml"
+	sriovNumVFs          = "4"
+	sriovAcSrvName       = "network-resources-injector"
+	sriovAcSvcAcctName   = "network-resources-injector-sa"
+	sriovAcConfigMapName = "openshift-service-ca"
+	sriovAcWebhookName   = "network-resources-injector-config"
+	sriovAcSvcName       = "network-resources-injector-service"
+	sriovACSrvSpec       = "sriov-admission-controller-server.yaml"
+	sriovACSvcSpec       = "sriov-admission-controller-service.yaml"
+	sriovACSvcAcctSpec   = "sriov-admission-controller-rbac.yaml"
+	sriovACWebhookSpec   = "sriov-admission-controller-webhook.yaml"
+	sriovACConfigMapSpec = "sriov-admission-controller-configmap.yaml"
 )
 
 var (
@@ -38,8 +44,11 @@ var (
 	DebugPodFixture = exutil.FixturePath("testdata", "sriovnetwork", debugPodSpec)
 	CNIDaemonFixture = exutil.FixturePath("testdata", "sriovnetwork", sriovCNISpec)
 	DevicePluginDaemonFixture = exutil.FixturePath("testdata", "sriovnetwork", sriovDPSpec)
+	AdmissionControllerSvcDaemonFixture = exutil.FixturePath("testdata", "sriovnetwork", sriovACSvcSpec)
+	AdmissionControllerSvcAcctDaemonFixture = exutil.FixturePath("testdata", "sriovnetwork", sriovACSvcAcctSpec)
+	AdmissionControllerConfigMapFixture = exutil.FixturePath("testdata", "sriovnetwork", sriovACConfigMapSpec)
+	AdmissionControllerWebhookDaemonFixture = exutil.FixturePath("testdata", "sriovnetwork", sriovACWebhookSpec)
 	AdmissionControllerServerDaemonFixture = exutil.FixturePath("testdata", "sriovnetwork", sriovACSrvSpec)
-	AdmissionControllerAuthDaemonFixture = exutil.FixturePath("testdata", "sriovnetwork", sriovACAuthSpec)
 )
 
 type ResourceConfig struct {
@@ -158,6 +167,18 @@ func CheckPodStatus(oc *exutil.CLI, name string) error {
 	return fmt.Errorf("Error in pod status. %s", pod.Status.Phase)
 }
 
+func CheckPodNameSpaceStatus(oc *exutil.CLI, namespace string, name string) error {
+	pod, err := oc.AdminKubeClient().CoreV1().Pods(namespace).
+		Get(name, metav1.GetOptions{})
+	if err != nil {
+		return fmt.Errorf("Could not get %s pod from namespace %s from v1.", name, namespace)
+	}
+	if pod.Status.Phase == corev1.PodRunning {
+		return nil
+	}
+	return fmt.Errorf("Error in pod status. %s", pod.Status.Phase)
+}
+
 func CheckSRIOVDaemonStatus(f *e2e.Framework, namespace string, name string) error {
 	ds, err := f.ClientSet.AppsV1().DaemonSets(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
@@ -173,6 +194,18 @@ func CheckSRIOVDaemonStatus(f *e2e.Framework, namespace string, name string) err
 	return nil
 }
 
+func CheckServiceStatus(oc *exutil.CLI, namespace string, name string) error {
+	sa, err := oc.AdminKubeClient().CoreV1().Services(namespace).
+		Get(name, metav1.GetOptions{})
+	if err != nil {
+		return fmt.Errorf("Could not get %s service from v1.", name)
+	}
+	if sa == nil {
+		return fmt.Errorf("Could not find %s service from v1.", name)
+	}
+	return nil
+}
+
 func CheckServiceAccountStatus(oc *exutil.CLI, namespace string, name string) error {
 	sa, err := oc.AdminKubeClient().CoreV1().ServiceAccounts(namespace).
 		Get(name, metav1.GetOptions{})
@@ -181,6 +214,30 @@ func CheckServiceAccountStatus(oc *exutil.CLI, namespace string, name string) er
 	}
 	if sa == nil {
 		return fmt.Errorf("Could not find %s service account from v1.", name)
+	}
+	return nil
+}
+
+func CheckConfigMapStatus(oc *exutil.CLI, namespace string, name string) error {
+	sa, err := oc.AdminKubeClient().CoreV1().ConfigMaps(namespace).
+		Get(name, metav1.GetOptions{})
+	if err != nil {
+		return fmt.Errorf("Could not get %s ConfigMap from v1.", name)
+	}
+	if sa == nil {
+		return fmt.Errorf("Could not find %s ConfigMap from v1.", name)
+	}
+	return nil
+}
+
+func CheckWebhookStatus(oc *exutil.CLI, name string) error {
+	sa, err := oc.AdminKubeClient().AdmissionregistrationV1beta1().MutatingWebhookConfigurations().
+		Get(name, metav1.GetOptions{})
+	if err != nil {
+		return fmt.Errorf("Could not get %s MutatingWebhookConfiguration from v1.", name)
+	}
+	if sa == nil {
+		return fmt.Errorf("Could not find %s MutatingWebhookConfiguration from v1.", name)
 	}
 	return nil
 }
