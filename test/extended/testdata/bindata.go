@@ -12455,7 +12455,7 @@ spec:
   containers:
   - command:
     - /bin/sh
-    image: zenghui/ocp-sriov-debug:latest
+    image: vpickard/ocp-sriov-debug:latest
     imagePullPolicy: Always
     name: container-00
     securityContext:
@@ -12897,6 +12897,7 @@ if [ -n "$INT" ]; then
 	exit 1
 fi
 
+# Clear VFs
 for i in `+"`"+`ls /sys/class/net`+"`"+`
 do
 	# Skip interface without SR-IOV capability
@@ -12932,7 +12933,37 @@ do
                 echo "failed to configure 0 vfs on $i interface, exiting"
                 exit 1
         fi
+done
 
+# Set VFs
+for i in `+"`"+`ls /sys/class/net`+"`"+`
+do
+	# Skip interface without SR-IOV capability
+	if [ ! -e /sys/class/net/$i/device/sriov_numvfs ]; then
+		continue
+	fi
+
+	# Skip interface with operstate being 'down'
+	if [ $(cat /sys/class/net/$i/operstate) == 'down' ]; then
+		continue
+	fi
+
+	# Skip interface with ip configured
+	if ip route list | grep -q $i; then
+		continue
+	fi
+
+	# Skip interface not from vendor id
+	if [ "$(cat /sys/class/net/$i/device/vendor)" != "$VENDORID" ]; then
+		continue
+	fi
+
+	# Skip interface not with device id
+	if [ "$(cat /sys/class/net/$i/device/device)" != "$DEVICEID" ]; then
+		continue
+	fi
+
+	# Set VF num
         chroot /host /bin/bash -c "echo $NUMVF > /sys/class/net/$i/device/sriov_numvfs"
         if [ $? == 0 ]; then
                 echo "successfully configured $NUMVF vfs on $i interface"

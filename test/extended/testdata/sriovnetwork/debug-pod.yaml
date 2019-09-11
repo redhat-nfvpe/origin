@@ -8,7 +8,7 @@ spec:
   containers:
   - command:
     - /bin/sh
-    image: zenghui/ocp-sriov-debug:latest
+    image: vpickard/ocp-sriov-debug:latest
     imagePullPolicy: Always
     name: container-00
     securityContext:
