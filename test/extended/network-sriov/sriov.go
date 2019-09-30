@@ -7,9 +7,9 @@ import (
 	"time"
 
 	exutil "github.com/openshift/origin/test/extended/util"
-	e2e "k8s.io/kubernetes/test/e2e/framework"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
+	e2e "k8s.io/kubernetes/test/e2e/framework"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -308,10 +308,13 @@ var _ = Describe("[Area:Networking][Serial] SRIOV", func() {
 				Expect(out).To(ContainSubstring(fmt.Sprintf("mtu")))
 				By(fmt.Sprintf("Pod net1 output: %s", out))
 
-				out, err = oc.AsAdmin().Run("exec").
-					Args("-p", fmt.Sprintf("testpod-%s", n.ResourceName),
-						"--", "/bin/bash", "-c", "ls /etc/podnetinfo/").Output()
-
+				err = wait.PollImmediate(e2e.Poll, 30*time.Second, func() (bool, error) {
+					out, err = CheckPodAnnotations(oc, fmt.Sprintf( "testpod-%s", n.ResourceName))
+					if err != nil {
+						return false, nil
+					}
+					return true, nil
+				})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(out).NotTo(ContainSubstring(fmt.Sprintf("does not exist")))
 				Expect(out).To(ContainSubstring(fmt.Sprintf("labels")))

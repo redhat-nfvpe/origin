@@ -167,6 +167,16 @@ func CheckPodStatus(oc *exutil.CLI, name string) error {
 	return fmt.Errorf("Error in pod status. %s", pod.Status.Phase)
 }
 
+func CheckPodAnnotations(oc *exutil.CLI, name string) (string, error) {
+
+	out, err := oc.AsAdmin().Run("exec").Args("-p", name,
+			"--", "/bin/bash", "-c", "ls /etc/podnetinfo/").Output()
+	if err != nil {
+		return out, fmt.Errorf("Could not find /etc/podnetinfo in pod %s", name)
+	}
+	return out, err
+}
+
 func CheckPodNameSpaceStatus(oc *exutil.CLI, namespace string, name string) error {
 	pod, err := oc.AdminKubeClient().CoreV1().Pods(namespace).
 		Get(name, metav1.GetOptions{})
