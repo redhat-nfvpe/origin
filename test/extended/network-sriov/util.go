@@ -174,7 +174,7 @@ func CheckPodAnnotations(oc *exutil.CLI, name string) (string, error) {
 	if err != nil {
 		return out, fmt.Errorf("Could not find /etc/podnetinfo in pod %s", name)
 	}
-	return out, err
+	return out, nil
 }
 
 func CheckPodNameSpaceStatus(oc *exutil.CLI, namespace string, name string) error {
