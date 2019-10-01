@@ -172,8 +172,10 @@ func CheckPodAnnotations(oc *exutil.CLI, name string) (string, error) {
 	out, err := oc.AsAdmin().Run("exec").Args("-p", name,
 			"--", "/bin/bash", "-c", "ls /etc/podnetinfo/").Output()
 	if err != nil {
-		return out, fmt.Errorf("Could not find /etc/podnetinfo in pod %s", name)
+		By(fmt.Sprintf("Pod /etc/podnetinfo/ does not exist"))
+		return out, err
 	}
+	By(fmt.Sprintf("Pod /etc/podnetinfo/ output: %s", out))
 	return out, nil
 }
 

@@ -309,7 +309,7 @@ var _ = Describe("[Area:Networking][Serial] SRIOV", func() {
 				By(fmt.Sprintf("Pod net1 output: %s", out))
 
 				err = wait.PollImmediate(e2e.Poll, 30*time.Second, func() (bool, error) {
-					out, err = CheckPodAnnotations(oc, fmt.Sprintf( "testpod-%s", n.ResourceName))
+					err = CheckPodAnnotations(oc, fmt.Sprintf( "testpod-%s", n.ResourceName))
 					if err != nil {
 						return false, nil
 					}
@@ -319,7 +319,6 @@ var _ = Describe("[Area:Networking][Serial] SRIOV", func() {
 				Expect(out).NotTo(ContainSubstring(fmt.Sprintf("does not exist")))
 				Expect(out).To(ContainSubstring(fmt.Sprintf("labels")))
 				Expect(out).To(ContainSubstring(fmt.Sprintf("annotations")))
-				By(fmt.Sprintf("Pod /etc/podnetinfo/ output: %s", out))
 				oc.AsAdmin().Run("delete").Args("-f", fmt.Sprintf("%s/pod-%s.yaml",
 					SRIOVTestDataFixture, n.ResourceName)).Execute()
 			}
