@@ -309,7 +309,7 @@ var _ = Describe("[Area:Networking][Serial] SRIOV", func() {
 				By(fmt.Sprintf("Pod net1 output: %s", out))
 
 				err = wait.PollImmediate(e2e.Poll, 30*time.Second, func() (bool, error) {
-					err = CheckPodAnnotations(oc, fmt.Sprintf( "testpod-%s", n.ResourceName))
+					out, err = CheckPodAnnotations(oc, fmt.Sprintf( "testpod-%s", n.ResourceName))
 					if err != nil {
 						return false, nil
 					}
