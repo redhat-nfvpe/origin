@@ -271,7 +271,7 @@ var _ = Describe("[Area:Networking][Serial] SRIOV", func() {
 				}
 			}()
 
-			time.Sleep(20 * time.Second)
+			time.Sleep(60 * time.Second)
 			for _, n := range resConfList.ResourceList {
 				templateArgs := fmt.Sprintf(
 					"'{{ index .status.allocatable \"openshift.com/%s\" }}'",
