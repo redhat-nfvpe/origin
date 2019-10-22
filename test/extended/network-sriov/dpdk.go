@@ -53,12 +53,6 @@ var _ = Describe("[Area:Networking][Serial] SRIOV DPDK", func() {
 					Args("node", n.GetName(), "node.sriovStatus=provisioning").Execute()
 				Expect(err).NotTo(HaveOccurred())
 
-				defer func() {
-					err = oc.AsAdmin().Run("label").
-						Args("node", n.GetName(), "node.sriovStatus-").Execute()
-					Expect(err).NotTo(HaveOccurred())
-				}()
-
 				By(fmt.Sprintf("Creating SRIOV debug pod on Node %s", n.GetName()))
 				err = CreateDebugPod(oc)
 				Expect(err).NotTo(HaveOccurred())
@@ -114,6 +108,10 @@ var _ = Describe("[Area:Networking][Serial] SRIOV DPDK", func() {
 
 				By(fmt.Sprintf("Deleting SRIOV debug pod on Node %s", n.GetName()))
 				err = DeleteDebugPod(oc)
+				Expect(err).NotTo(HaveOccurred())
+
+				err = oc.AsAdmin().Run("label").
+					Args("node", n.GetName(), "node.sriovStatus-").Execute()
 				Expect(err).NotTo(HaveOccurred())
 			}
 
