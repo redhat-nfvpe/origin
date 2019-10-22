@@ -266,7 +266,7 @@ var _ = Describe("[Area:Networking][Serial] SRIOV DPDK", func() {
 
 				if n.ResourceName == "intelxxv710" {
 					out, err := oc.AsAdmin().Run("exec").
-						Args("-p", fmt.Sprintf("testpod-%s-dpdk", n.ResourceName),
+						Args(fmt.Sprintf("testpod-%s-dpdk", n.ResourceName),
 						"--", "/bin/bash", "-c", "ls /dev/vfio/vfio").Output()
 					Expect(err).NotTo(HaveOccurred())
 					Expect(out).NotTo(ContainSubstring(fmt.Sprintf("No such file")))
@@ -289,7 +289,7 @@ var _ = Describe("[Area:Networking][Serial] SRIOV DPDK", func() {
 					By(fmt.Sprintf("Pod vfio device output: %s", out))
 				} else {
 					out, err := oc.AsAdmin().Run("exec").
-						Args("-p", fmt.Sprintf("testpod-%s-dpdk", n.ResourceName),
+						Args(fmt.Sprintf("testpod-%s-dpdk", n.ResourceName),
 						"--", "/bin/bash", "-c", "ip link show dev net1").Output()
 					Expect(err).NotTo(HaveOccurred())
 					Expect(out).NotTo(ContainSubstring(fmt.Sprintf("does not exist")))

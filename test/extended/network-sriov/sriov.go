@@ -301,7 +301,7 @@ var _ = Describe("[Area:Networking][Serial] SRIOV", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				out, err := oc.AsAdmin().Run("exec").
-					Args("-p", fmt.Sprintf("testpod-%s", n.ResourceName),
+					Args(fmt.Sprintf("testpod-%s", n.ResourceName),
 						"--", "/bin/bash", "-c", "ip link show dev net1").Output()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(out).NotTo(ContainSubstring(fmt.Sprintf("does not exist")))

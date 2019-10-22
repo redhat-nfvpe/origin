@@ -193,7 +193,7 @@ var _ = Describe("[Area:Networking][Serial] SRIOV VF Flags", func() {
 
 				for i := 0; i < count; i++ {
 					out, err := oc.AsAdmin().Run("exec").
-						Args("-p", fmt.Sprintf("testpod-%s", n.ResourceName),
+						Args(fmt.Sprintf("testpod-%s", n.ResourceName),
 							"--", "/bin/bash", "-c", "ip link show dev net1 | grep \"vf %s\",i", n.ResourceNum).Output()
 					Expect(err).NotTo(HaveOccurred())
 					Expect(out).NotTo(ContainSubstring(fmt.Sprintf("does not exist")))
@@ -204,7 +204,7 @@ var _ = Describe("[Area:Networking][Serial] SRIOV VF Flags", func() {
 				}
 
 				out, err := oc.AsAdmin().Run("exec").
-					Args("-p", fmt.Sprintf("testpod-%s", n.ResourceName),
+					Args(fmt.Sprintf("testpod-%s", n.ResourceName),
 						"--", "/bin/bash", "-c", "ls /etc/podnetinfo/").Output()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(out).NotTo(ContainSubstring(fmt.Sprintf("does not exist")))
@@ -233,7 +233,7 @@ var _ = Describe("[Area:Networking][Serial] SRIOV VF Flags", func() {
 
 					for i := 0; i < count; i++ {
 						out, err := oc.AsAdmin().Run("exec").
-							Args("-p", fmt.Sprintf("testpod-%s", n.ResourceName),
+							Args(fmt.Sprintf("testpod-%s", n.ResourceName),
 								"--", "/bin/bash", "-c", "ip link show dev net1 | grep \"vf %s\",i", n.ResourceNum).Output()
 						Expect(err).NotTo(HaveOccurred())
 						Expect(out).NotTo(ContainSubstring(fmt.Sprintf("does not exist")))
