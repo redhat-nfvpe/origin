@@ -124,7 +124,7 @@ var _ = Describe("[Area:Networking][Serial] SRIOV DPDK", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					By(fmt.Sprintf("Creating SRIOV debug pod on Node %s", n.GetName()))
-					err := CreateDebugPod(oc)
+					err = CreateDebugPod(oc)
 					Expect(err).NotTo(HaveOccurred())
 
 					pod, err := oc.AdminKubeClient().CoreV1().Pods(oc.Namespace()).
