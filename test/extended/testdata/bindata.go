@@ -12290,11 +12290,15 @@ if [ "$Bind" == "yes" ]; then
 		if [ ! -e /sys/class/net/$i/device ]; then
 			continue
 		fi
-	
-		# Skip interface with operstate being 'down'
-		if [ $(cat /sys/class/net/$i/operstate) == 'down' ]; then
-			continue
-		fi
+
+		# VF state is set to 'down' by SR-IOV Operator
+		# comment out the link state check here to
+		# workaround it.
+
+		# # Skip interface with operstate being 'down'
+		# if [ $(cat /sys/class/net/$i/operstate) == 'down' ]; then
+		# 	continue
+		# fi
 	
 		# Skip interface with ip configured
 		if [ $(ip route list | grep -q $i) ]; then
@@ -12455,7 +12459,7 @@ spec:
   containers:
   - command:
     - /bin/sh
-    image: vpickard/ocp-sriov-debug:latest
+    image: nfvpe/ocp-sriov-debug:latest
     imagePullPolicy: Always
     name: container-00
     securityContext:
